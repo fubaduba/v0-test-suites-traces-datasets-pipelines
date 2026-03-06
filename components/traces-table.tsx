@@ -4,7 +4,25 @@ import { useState } from "react"
 import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { AnnotateDialog } from "./annotate-dialog"
+import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
+import { AnnotationWizard } from "./annotation-wizard"
+
+interface AnnotationResult {
+  id: string
+  traceId: string
+  conversationId: string
+  responseId: string
+  startTime: string
+  timestamp: string
+  thumbAnswers: Record<string, boolean | null>
+  sliderAnswers: Record<string, number>
+  multipleChoiceAnswers: Record<string, string>
+  freeFormAnswers: Record<string, string>
+}
+
+interface TracesTableProps {
+  onAnnotationComplete: (results: AnnotationResult[], templateName: string) => void
+}
 
 // Generate mock trace data
 const generateTraceData = () => {
@@ -197,9 +215,11 @@ const traces = generateTraceData()
 
 const timeFilters = ["Last Day", "7D", "1M", "3M"]
 
-export function TracesTable() {
+export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
+  const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
 
   const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows)
@@ -222,12 +242,27 @@ export function TracesTable() {
   const isAllSelected = selectedRows.size === traces.length
   const isSomeSelected = selectedRows.size > 0 && selectedRows.size < traces.length
 
-  const handleAnnotate = (templateId: string) => {
-    // Handle the annotation with the selected template
-    console.log(`Annotating ${selectedRows.size} traces with template ${templateId}`)
+  const handleStartAnnotation = (template: FullTemplate) => {
+    setSelectedTemplate(template)
     setShowAnnotateDialog(false)
+    setShowAnnotationWizard(true)
+  }
+
+  const handleAnnotationComplete = (results: AnnotationResult[]) => {
+    if (selectedTemplate) {
+      // Add unique IDs to results
+      const resultsWithIds = results.map((r) => ({
+        ...r,
+        id: `${r.traceId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      }))
+      onAnnotationComplete(resultsWithIds, selectedTemplate.name)
+    }
+    setShowAnnotationWizard(false)
+    setSelectedTemplate(null)
     setSelectedRows(new Set())
   }
+
+  const selectedTraces = traces.filter((t) => selectedRows.has(t.id))
 
   return (
     <div className="flex-1 p-6 overflow-auto">
@@ -451,7 +486,26 @@ export function TracesTable() {
         <AnnotateDialog
           selectedCount={selectedRows.size}
           onClose={() => setShowAnnotateDialog(false)}
-          onAnnotate={handleAnnotate}
+          onStartAnnotation={handleStartAnnotation}
+        />
+      )}
+
+      {/* Annotation Wizard */}
+      {showAnnotationWizard && selectedTemplate && (
+        <AnnotationWizard
+          traces={selectedTraces.map((t) => ({
+            id: t.id,
+            conversationId: t.conversationId,
+            traceId: t.traceId,
+            responseId: t.responseId,
+            startTime: t.startTime,
+          }))}
+          template={selectedTemplate}
+          onClose={() => {
+            setShowAnnotationWizard(false)
+            setSelectedTemplate(null)
+          }}
+          onComplete={handleAnnotationComplete}
         />
       )}
     </div>

@@ -3,14 +3,19 @@
 import { ArrowLeft, ChevronDown, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+interface AgentHeaderProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+}
+
 const tabs = [
-  { label: "Playground", active: false },
-  { label: "Traces", active: true },
-  { label: "Monitor", active: false },
-  { label: "Evaluation", active: false },
+  { label: "Playground", id: "playground" },
+  { label: "Traces", id: "traces" },
+  { label: "Monitor", id: "monitor" },
+  { label: "Evaluation", id: "evaluation" },
 ]
 
-export function AgentHeader() {
+export function AgentHeader({ activeTab, onTabChange }: AgentHeaderProps) {
   return (
     <div className="px-6 py-4 border-b border-border">
       {/* Top row */}
@@ -52,9 +57,10 @@ export function AgentHeader() {
       <div className="flex items-center gap-6">
         {tabs.map((tab) => (
           <button
-            key={tab.label}
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
             className={`text-sm pb-2 border-b-2 transition-colors ${
-              tab.active
+              activeTab === tab.id
                 ? "text-foreground border-foreground font-medium"
                 : "text-muted-foreground border-transparent hover:text-foreground"
             }`}

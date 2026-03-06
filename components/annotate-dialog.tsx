@@ -5,36 +5,157 @@ import { X, Plus, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CreateTemplateForm } from "./create-template-form"
 
-interface Template {
+interface ThumbQuestion {
+  id: string
+  label: string
+}
+
+interface SliderQuestion {
+  id: string
+  question: string
+  range: string
+}
+
+interface MultipleChoiceOption {
+  id: string
+  label: string
+}
+
+interface MultipleChoiceQuestion {
+  id: string
+  question: string
+  options: MultipleChoiceOption[]
+}
+
+interface FreeFormQuestion {
+  id: string
+  label: string
+}
+
+export interface FullTemplate {
   id: string
   name: string
   version: string
+  thumbQuestions: ThumbQuestion[]
+  sliderQuestions: SliderQuestion[]
+  multipleChoiceQuestions: MultipleChoiceQuestion[]
+  freeFormQuestions: FreeFormQuestion[]
 }
 
 interface AnnotateDialogProps {
   selectedCount: number
   onClose: () => void
-  onAnnotate: (templateId: string) => void
+  onStartAnnotation: (template: FullTemplate) => void
 }
 
-// Mock existing templates
-const existingTemplates: Template[] = [
-  { id: "1", name: "Customer Support Evaluation", version: "2" },
-  { id: "2", name: "Response Quality Check", version: "1" },
-  { id: "3", name: "Agent Performance Review", version: "3" },
+// Mock existing templates with full data
+const existingTemplates: FullTemplate[] = [
+  {
+    id: "1",
+    name: "Customer Support Evaluation",
+    version: "2",
+    thumbQuestions: [
+      { id: "1", label: "Groundedness" },
+      { id: "2", label: "Fluency" },
+    ],
+    sliderQuestions: [
+      { id: "1", question: "What is your level of agreement with this response?", range: "1 - 5" },
+    ],
+    multipleChoiceQuestions: [
+      {
+        id: "1",
+        question: "How would you rate the quality of this response?",
+        options: [
+          { id: "1", label: "Bad" },
+          { id: "2", label: "Average" },
+          { id: "3", label: "Good" },
+        ],
+      },
+    ],
+    freeFormQuestions: [
+      { id: "1", label: "Additional comments" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Response Quality Check",
+    version: "1",
+    thumbQuestions: [
+      { id: "1", label: "Accuracy" },
+      { id: "2", label: "Helpfulness" },
+    ],
+    sliderQuestions: [
+      { id: "1", question: "Rate the overall response quality", range: "1 - 10" },
+    ],
+    multipleChoiceQuestions: [],
+    freeFormQuestions: [
+      { id: "1", label: "Improvement suggestions" },
+    ],
+  },
+  {
+    id: "3",
+    name: "Agent Performance Review",
+    version: "3",
+    thumbQuestions: [
+      { id: "1", label: "Task Completion" },
+      { id: "2", label: "Professional Tone" },
+      { id: "3", label: "Correct Information" },
+    ],
+    sliderQuestions: [
+      { id: "1", question: "How well did the agent handle the request?", range: "1 - 5" },
+    ],
+    multipleChoiceQuestions: [
+      {
+        id: "1",
+        question: "Would you recommend this agent to others?",
+        options: [
+          { id: "1", label: "Definitely not" },
+          { id: "2", label: "Probably not" },
+          { id: "3", label: "Maybe" },
+          { id: "4", label: "Probably yes" },
+          { id: "5", label: "Definitely yes" },
+        ],
+      },
+    ],
+    freeFormQuestions: [
+      { id: "1", label: "What could be improved?" },
+      { id: "2", label: "What was done well?" },
+    ],
+  },
 ]
 
-export function AnnotateDialog({ selectedCount, onClose, onAnnotate }: AnnotateDialogProps) {
+export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: AnnotateDialogProps) {
   const [showCreateTemplate, setShowCreateTemplate] = useState(false)
-  const [templates, setTemplates] = useState<Template[]>(existingTemplates)
+  const [templates, setTemplates] = useState<FullTemplate[]>(existingTemplates)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [showDropdown, setShowDropdown] = useState(false)
 
   const handleCreateTemplate = (template: { name: string; version: string; description: string }) => {
-    const newTemplate: Template = {
+    const newTemplate: FullTemplate = {
       id: Date.now().toString(),
       name: template.name,
       version: template.version,
+      thumbQuestions: [
+        { id: "1", label: "Groundedness" },
+        { id: "2", label: "Fluency" },
+      ],
+      sliderQuestions: [
+        { id: "1", question: "What is your level of agreement with this response?", range: "1 - 5" },
+      ],
+      multipleChoiceQuestions: [
+        {
+          id: "1",
+          question: "How would you rate the quality of this response?",
+          options: [
+            { id: "1", label: "Bad" },
+            { id: "2", label: "Average" },
+            { id: "3", label: "Good" },
+          ],
+        },
+      ],
+      freeFormQuestions: [
+        { id: "1", label: "Additional comments" },
+      ],
     }
     setTemplates([...templates, newTemplate])
     setSelectedTemplate(newTemplate.id)
@@ -42,6 +163,12 @@ export function AnnotateDialog({ selectedCount, onClose, onAnnotate }: AnnotateD
   }
 
   const selectedTemplateData = templates.find((t) => t.id === selectedTemplate)
+
+  const handleStartAnnotation = () => {
+    if (selectedTemplateData) {
+      onStartAnnotation(selectedTemplateData)
+    }
+  }
 
   if (showCreateTemplate) {
     return (
@@ -134,7 +261,7 @@ export function AnnotateDialog({ selectedCount, onClose, onAnnotate }: AnnotateD
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
           <Button
             variant="secondary"
-            onClick={() => selectedTemplate && onAnnotate(selectedTemplate)}
+            onClick={handleStartAnnotation}
             disabled={!selectedTemplate}
             className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
           >
