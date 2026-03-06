@@ -1,12 +1,16 @@
 "use client"
 
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle } from "lucide-react"
+import { useState } from "react"
+import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { AnnotateDialog } from "./annotate-dialog"
 
 // Generate mock trace data
 const generateTraceData = () => {
   const traces = [
     {
+      id: "1",
       conversationId: "conv_8ac8a6894bf475d300x4Yjk0k9sI49VU6mu9mmiu8ekHsfjgA",
       traceId: "7a6bf85a13a84c58b38d001f6e973870",
       responseId: "resp_8ac8a6894bf475d30069a9e6b1e7488190bce43c03042bdc45",
@@ -24,6 +28,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "2",
       conversationId: "conv_e715a2a704e2bec8008VFBtHuNLRoD4R7XG38plWvAhrtVo0zQ",
       traceId: "04d96fd4fdf19f69d0a55a6a5c22a5f0",
       responseId: "resp_e715a2a704e2bec80069a9bc1d751c8190be09d221a6979018",
@@ -41,6 +46,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "3",
       conversationId: "conv_c2f1e7ee861784f200DMVp87Xc2VZQbunrHDVIIHbFiLgW1YCe",
       traceId: "110169b515f177fead90686d80caef4a",
       responseId: "resp_c2f1e7ee861784f20069a9bc1787f48190bda305611c1d999c",
@@ -58,6 +64,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "4",
       conversationId: "conv_7f2beeab518ec78700biHyqsd3aC0K4gfR2J6nwGL8gMbCCwQf",
       traceId: "a0566515dd63b9d27e34679210b34b39",
       responseId: "resp_7f2beeab518ec787006ga9bc1268e081908321f19be79783fe",
@@ -75,6 +82,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "5",
       conversationId: "conv_c407274ba6ff029d004BjhU1MrvI8xenwKkvYVf4hjHfygo0NEr",
       traceId: "aa5342ceactf872d48c33594e08d75d69",
       responseId: "resp_c407274ba6ff029d0069a9bc0e3c7c819094105f37218ed2c3",
@@ -92,6 +100,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "6",
       conversationId: "conv_9033c0d3de28139800n7h7UCTJef3NTFlixHmXwUY9p9m43e91",
       traceId: "bc8f70064eaec9cd1ddae235e8c6a619",
       responseId: "resp_9033c0d3de2813980069a9bc09187481909083967e2918baa",
@@ -109,6 +118,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "7",
       conversationId: "conv_1ea79ce43e71a24f00RGUFsSsnUODNqe5VGdZ76L89elHHROEA",
       traceId: "62ee87ceaeab8eaaf1c9f7a3184a770f",
       responseId: "resp_1ea79ce43e71a24f0069a9bc0375508190ad7eb274c3b5ede6",
@@ -126,6 +136,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "8",
       conversationId: "conv_2b94f2994b5d57b300HhbcKJRE5O1bPw3ivLdAJEG30dkNQY8X",
       traceId: "3e69781ceb90e98f6b94c1a705b42e9c",
       responseId: "resp_2b94f2994b5d57b30069a9bbfd892081908839d97d1286e639",
@@ -143,6 +154,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "9",
       conversationId: "conv_a12c0cb4e10ecd4a00Vd3RvlvxYtotF5HOHYKowJXPGx7OAaIn",
       traceId: "37fe0ce4c1c77f8020d49e5026186f4f",
       responseId: "resp_a12c0cb4e10ecd4a0069a9bbf7e064819083385f322bb77d7f",
@@ -160,6 +172,7 @@ const generateTraceData = () => {
       agentVersion: 21,
     },
     {
+      id: "10",
       conversationId: "conv_5fff944bf1e7a21800D1kUjmMtb6q00vr2o1Zdw8UpJ6y3a3jD",
       traceId: "a8b694f0b673b40ba21b3b9cb5b71142",
       responseId: "resp_5fff944bf1e7a2180069a9bbf1077881908dce2bd004f7dbf7",
@@ -185,6 +198,37 @@ const traces = generateTraceData()
 const timeFilters = ["Last Day", "7D", "1M", "3M"]
 
 export function TracesTable() {
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
+
+  const toggleRow = (id: string) => {
+    const newSelected = new Set(selectedRows)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedRows(newSelected)
+  }
+
+  const toggleAllRows = () => {
+    if (selectedRows.size === traces.length) {
+      setSelectedRows(new Set())
+    } else {
+      setSelectedRows(new Set(traces.map((t) => t.id)))
+    }
+  }
+
+  const isAllSelected = selectedRows.size === traces.length
+  const isSomeSelected = selectedRows.size > 0 && selectedRows.size < traces.length
+
+  const handleAnnotate = (templateId: string) => {
+    // Handle the annotation with the selected template
+    console.log(`Annotating ${selectedRows.size} traces with template ${templateId}`)
+    setShowAnnotateDialog(false)
+    setSelectedRows(new Set())
+  }
+
   return (
     <div className="flex-1 p-6 overflow-auto">
       {/* Filters */}
@@ -207,8 +251,24 @@ export function TracesTable() {
           </Button>
         </div>
 
-        {/* Date range */}
+        {/* Annotate button and Date range */}
         <div className="flex items-center gap-2">
+          {/* Annotate Button */}
+          <Button
+            variant="outline"
+            className="text-sm"
+            disabled={selectedRows.size === 0}
+            onClick={() => setShowAnnotateDialog(true)}
+          >
+            <Tag className="w-4 h-4 mr-2" />
+            Annotate
+            {selectedRows.size > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded">
+                {selectedRows.size}
+              </span>
+            )}
+          </Button>
+
           <Button variant="outline" className="text-sm">
             <Calendar className="w-4 h-4 mr-2" />
             2/27/2026 - 3/6/2026
@@ -234,6 +294,14 @@ export function TracesTable() {
         <table className="w-full text-sm">
           <thead className="bg-secondary/50">
             <tr className="border-b border-border">
+              <th className="px-4 py-3 w-10">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={toggleAllRows}
+                  aria-label="Select all rows"
+                  className={isSomeSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                />
+              </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                 <div className="flex items-center gap-1">
                   Conversation ID
@@ -303,11 +371,21 @@ export function TracesTable() {
             </tr>
           </thead>
           <tbody>
-            {traces.map((trace, index) => (
+            {traces.map((trace) => (
               <tr
-                key={index}
-                className="border-b border-border hover:bg-secondary/30 transition-colors"
+                key={trace.id}
+                className={`border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer ${
+                  selectedRows.has(trace.id) ? "bg-secondary/40" : ""
+                }`}
+                onClick={() => toggleRow(trace.id)}
               >
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedRows.has(trace.id)}
+                    onCheckedChange={() => toggleRow(trace.id)}
+                    aria-label={`Select row ${trace.id}`}
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <span className="text-primary font-mono text-xs break-all max-w-[140px] block">
                     {trace.conversationId.substring(0, 45)}
@@ -367,6 +445,15 @@ export function TracesTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Annotate Dialog */}
+      {showAnnotateDialog && (
+        <AnnotateDialog
+          selectedCount={selectedRows.size}
+          onClose={() => setShowAnnotateDialog(false)}
+          onAnnotate={handleAnnotate}
+        />
+      )}
     </div>
   )
 }
