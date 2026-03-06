@@ -24,7 +24,7 @@ interface TracesTableProps {
   onAnnotationComplete: (results: AnnotationResult[], templateName: string) => void
 }
 
-// Generate mock trace data
+// Generate mock trace data with Microsoft Foundry support questions
 const generateTraceData = () => {
   const traces = [
     {
@@ -44,6 +44,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 5,
       agentVersion: 21,
+      input: "How do I create a new agent in Microsoft Foundry?",
+      output: "To create a new agent in Microsoft Foundry, follow these steps:\n\n1. Navigate to the Agents section in the left sidebar\n2. Click the '+ Create' button at the bottom of the page\n3. Enter your agent's name and description\n4. Configure the agent's capabilities and tools\n5. Set up the evaluation criteria\n6. Click 'Create' to deploy your agent\n\nYou can then test your agent in the Playground tab before publishing it to production.",
     },
     {
       id: "2",
@@ -62,6 +64,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 1,
       agentVersion: 21,
+      input: "What is the difference between Automatic Evaluation and Human Evaluation in Foundry?",
+      output: "Microsoft Foundry offers two types of evaluation:\n\n**Automatic Evaluation**: Uses AI-powered metrics to assess agent responses automatically. This includes relevance scoring, coherence analysis, and task completion rates. It's faster and can process large volumes of interactions.\n\n**Human Evaluation**: Allows human reviewers to manually assess agent responses using customizable scoring templates. This provides nuanced feedback on aspects like groundedness, fluency, and overall quality that automated systems might miss.\n\nBoth approaches can be used together for comprehensive quality assurance.",
     },
     {
       id: "3",
@@ -80,6 +84,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 1,
       agentVersion: 21,
+      input: "How can I monitor my agent's token usage and costs?",
+      output: "You can monitor token usage and costs in Microsoft Foundry through the Traces tab:\n\n1. Navigate to your agent and select the 'Traces' tab\n2. The table shows 'Tokens (In)' and 'Tokens (Out)' columns for each conversation\n3. The 'Estimated cost ($)' column shows the per-request cost\n4. Use the date filters to analyze costs over specific time periods\n5. For aggregate metrics, check the 'Monitor' tab for dashboards showing total usage\n\nYou can also set up cost alerts in the project settings to get notified when usage exceeds thresholds.",
     },
     {
       id: "4",
@@ -98,6 +104,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 1,
       agentVersion: 21,
+      input: "What tools can I add to my agent in Microsoft Foundry?",
+      output: "Microsoft Foundry supports various tool integrations for your agents:\n\n**Built-in Tools**:\n- Knowledge Base search\n- Document retrieval\n- Calculator\n- Code interpreter\n\n**Custom Tools**:\n- REST API integrations\n- Database connectors\n- Custom functions\n\n**Third-party Integrations**:\n- Microsoft Graph API\n- Azure services\n- External APIs\n\nTo add tools, go to the 'Tools' section in your agent configuration and click 'Add Tool'. You can configure authentication, parameters, and usage guidelines for each tool.",
     },
     {
       id: "5",
@@ -116,6 +124,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 3,
       agentVersion: 21,
+      input: "How do I set up guardrails for my agent?",
+      output: "To configure guardrails in Microsoft Foundry:\n\n1. Go to the 'Guardrails' section in the left sidebar\n2. Click 'Create Guardrail' to add a new rule\n3. Choose the guardrail type:\n   - Content filters (block harmful content)\n   - Topic restrictions (stay on-topic)\n   - PII detection (protect personal data)\n   - Custom rules (define your own criteria)\n4. Set the action: warn, block, or escalate\n5. Apply the guardrail to specific agents\n\nGuardrails are evaluated in real-time and help ensure safe, compliant agent behavior.",
     },
     {
       id: "6",
@@ -134,6 +144,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 0,
       agentVersion: 21,
+      input: "Can I version my agents in Microsoft Foundry?",
+      output: "Yes, Microsoft Foundry supports agent versioning:\n\n1. Each time you save changes to your agent, a new version is created automatically\n2. You can view the version history in the agent header (e.g., 'v21 saved 2/24/2026')\n3. Use the 'Preview' dropdown to test different versions\n4. The 'Publish' button deploys a specific version to production\n5. You can rollback to previous versions if needed\n\nIn the Traces tab, each conversation shows which 'Agent version' handled the request, helping you track performance across versions.",
     },
     {
       id: "7",
@@ -152,6 +164,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 2,
       agentVersion: 21,
+      input: "How do I add a knowledge base to my Foundry agent?",
+      output: "To add a knowledge base to your agent:\n\n1. Navigate to the 'Knowledge' section in the left sidebar\n2. Click 'Create Knowledge Base'\n3. Choose your data source:\n   - Upload documents (PDF, Word, text files)\n   - Connect to SharePoint or OneDrive\n   - Link to external URLs\n   - Connect to Azure Blob Storage\n4. Configure chunking and embedding settings\n5. Wait for indexing to complete\n6. In your agent settings, enable the Knowledge Base tool and select your knowledge base\n\nYour agent will now be able to search and retrieve information from your documents.",
     },
     {
       id: "8",
@@ -170,6 +184,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 1,
       agentVersion: 21,
+      input: "What is the Playground in Microsoft Foundry used for?",
+      output: "The Playground in Microsoft Foundry is an interactive testing environment for your agents:\n\n**Key Features**:\n- Test agent responses in real-time before publishing\n- Simulate different user inputs and scenarios\n- View detailed logs and tool calls\n- Debug agent behavior step-by-step\n- Compare responses across different agent versions\n\n**Best Practices**:\n- Test edge cases and error handling\n- Verify tool integrations work correctly\n- Check guardrails are functioning as expected\n- Validate response quality before publishing\n\nAccess the Playground by selecting your agent and clicking the 'Playground' tab.",
     },
     {
       id: "9",
@@ -188,6 +204,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 1,
       agentVersion: 21,
+      input: "How do I create a workflow that connects multiple agents?",
+      output: "To create a multi-agent workflow in Microsoft Foundry:\n\n1. Go to the 'Workflows' section in the left sidebar\n2. Click 'Create Workflow'\n3. Use the visual builder to add agents as nodes\n4. Connect agents with conditional logic:\n   - Sequential execution\n   - Parallel processing\n   - Conditional branching\n5. Define handoff rules between agents\n6. Configure shared context and memory\n7. Set up error handling and fallbacks\n\nWorkflows enable complex scenarios like customer support escalation, multi-step task completion, and specialized agent routing based on user intent.",
     },
     {
       id: "10",
@@ -206,6 +224,8 @@ const generateTraceData = () => {
       ],
       moreEvals: 0,
       agentVersion: 21,
+      input: "What models are available for fine-tuning in Microsoft Foundry?",
+      output: "Microsoft Foundry supports fine-tuning of several models:\n\n**Available Models**:\n- GPT-4 series (GPT-4, GPT-4 Turbo)\n- GPT-3.5 Turbo\n- Azure OpenAI custom models\n- Open-source models (Llama, Mistral)\n\n**Fine-tuning Process**:\n1. Go to 'Fine-tune' in the left sidebar\n2. Select your base model\n3. Upload your training data (JSONL format)\n4. Configure hyperparameters\n5. Start the fine-tuning job\n6. Monitor progress and evaluate results\n\nFine-tuned models can then be used in your agents for domain-specific performance improvements.",
     },
   ]
   return traces
@@ -499,6 +519,8 @@ export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
             traceId: t.traceId,
             responseId: t.responseId,
             startTime: t.startTime,
+            input: t.input,
+            output: t.output,
           }))}
           template={selectedTemplate}
           onClose={() => {

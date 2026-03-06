@@ -10,6 +10,8 @@ interface TraceData {
   traceId: string
   responseId: string
   startTime: string
+  input: string
+  output: string
 }
 
 interface ThumbQuestion {
@@ -176,31 +178,39 @@ export function AnnotationWizard({ traces, template, onClose, onComplete }: Anno
           </button>
         </div>
 
-        {/* Trace Info */}
-        <div className="px-6 py-4 bg-secondary/30 border-b border-border">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Conversation ID:</span>
-              <span className="ml-2 font-mono text-xs text-primary">
-                {currentTrace.conversationId.substring(0, 30)}...
-              </span>
+        {/* Trace Input/Output */}
+        <div className="px-6 py-4 border-b border-border space-y-4 max-h-[300px] overflow-y-auto">
+          {/* User Input */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs text-primary font-medium">U</span>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">User Input</span>
+              <span className="text-xs text-muted-foreground ml-auto">{currentTrace.startTime}</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Start Time:</span>
-              <span className="ml-2 text-foreground">{currentTrace.startTime}</span>
+            <div className="ml-8 p-3 bg-secondary/50 rounded-lg">
+              <p className="text-sm text-foreground">{currentTrace.input}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Trace ID:</span>
-              <span className="ml-2 font-mono text-xs text-foreground">
-                {currentTrace.traceId.substring(0, 20)}...
-              </span>
+          </div>
+
+          {/* Agent Output */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-success/20 flex items-center justify-center">
+                <span className="text-xs text-success font-medium">A</span>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Agent Response</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Response ID:</span>
-              <span className="ml-2 font-mono text-xs text-foreground">
-                {currentTrace.responseId.substring(0, 25)}...
-              </span>
+            <div className="ml-8 p-3 bg-secondary/30 rounded-lg">
+              <p className="text-sm text-foreground whitespace-pre-wrap">{currentTrace.output}</p>
             </div>
+          </div>
+
+          {/* Trace Metadata (collapsed) */}
+          <div className="ml-8 flex flex-wrap gap-3 text-xs text-muted-foreground pt-2 border-t border-border/50">
+            <span>Trace: <span className="font-mono">{currentTrace.traceId.substring(0, 12)}...</span></span>
+            <span>Response: <span className="font-mono">{currentTrace.responseId.substring(0, 16)}...</span></span>
           </div>
         </div>
 
