@@ -7,6 +7,28 @@ import { AgentHeader } from "@/components/agent-header"
 import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
 
+interface ThumbQuestion {
+  id: string
+  label: string
+}
+
+interface SliderQuestion {
+  id: string
+  question: string
+  range: string
+}
+
+interface MultipleChoiceQuestion {
+  id: string
+  question: string
+  options: { id: string; label: string }[]
+}
+
+interface FreeFormQuestion {
+  id: string
+  label: string
+}
+
 interface EvaluationResult {
   id: string
   timestamp: string
@@ -23,6 +45,10 @@ interface EvaluationTemplate {
   id: string
   name: string
   status: "Active" | "Inactive"
+  thumbQuestions?: ThumbQuestion[]
+  sliderQuestions?: SliderQuestion[]
+  multipleChoiceQuestions?: MultipleChoiceQuestion[]
+  freeFormQuestions?: FreeFormQuestion[]
   results: EvaluationResult[]
 }
 
@@ -33,15 +59,34 @@ export default function AgentMonitoringPage() {
       id: "1",
       name: "test",
       status: "Active",
+      thumbQuestions: [
+        { id: "1", label: "Groundedness" },
+        { id: "2", label: "Fluency" },
+      ],
+      sliderQuestions: [],
+      multipleChoiceQuestions: [],
+      freeFormQuestions: [],
       results: [],
     },
   ])
 
-  const handleCreateTemplate = (template: { name: string; version: string; description: string }) => {
+  const handleCreateTemplate = (template: {
+    name: string
+    version: string
+    description: string
+    thumbQuestions: ThumbQuestion[]
+    sliderQuestions: SliderQuestion[]
+    multipleChoiceQuestions: MultipleChoiceQuestion[]
+    freeFormQuestions: FreeFormQuestion[]
+  }) => {
     const newTemplate: EvaluationTemplate = {
       id: Date.now().toString(),
       name: template.name,
       status: "Active",
+      thumbQuestions: template.thumbQuestions,
+      sliderQuestions: template.sliderQuestions,
+      multipleChoiceQuestions: template.multipleChoiceQuestions,
+      freeFormQuestions: template.freeFormQuestions,
       results: [],
     }
     setEvaluationTemplates([...evaluationTemplates, newTemplate])

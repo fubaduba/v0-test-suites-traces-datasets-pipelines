@@ -15,16 +15,50 @@ interface EvaluationResult {
   freeFormAnswers: Record<string, string>
 }
 
+interface ThumbQuestion {
+  id: string
+  label: string
+}
+
+interface SliderQuestion {
+  id: string
+  question: string
+  range: string
+}
+
+interface MultipleChoiceQuestion {
+  id: string
+  question: string
+  options: { id: string; label: string }[]
+}
+
+interface FreeFormQuestion {
+  id: string
+  label: string
+}
+
 interface EvaluationTemplate {
   id: string
   name: string
   status: "Active" | "Inactive"
+  thumbQuestions?: ThumbQuestion[]
+  sliderQuestions?: SliderQuestion[]
+  multipleChoiceQuestions?: MultipleChoiceQuestion[]
+  freeFormQuestions?: FreeFormQuestion[]
   results: EvaluationResult[]
 }
 
 interface EvaluationViewProps {
   templates: EvaluationTemplate[]
-  onCreateTemplate: (template: { name: string; version: string; description: string }) => void
+  onCreateTemplate: (template: {
+    name: string
+    version: string
+    description: string
+    thumbQuestions: ThumbQuestion[]
+    sliderQuestions: SliderQuestion[]
+    multipleChoiceQuestions: MultipleChoiceQuestion[]
+    freeFormQuestions: FreeFormQuestion[]
+  }) => void
 }
 
 const subTabs = [
