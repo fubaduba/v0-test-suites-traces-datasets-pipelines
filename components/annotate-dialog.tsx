@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Plus, ChevronDown } from "lucide-react"
+import { X, Plus, ChevronDown, ChevronRight, ThumbsUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CreateTemplateForm } from "./create-template-form"
 
@@ -46,6 +46,19 @@ interface AnnotateDialogProps {
   selectedCount: number
   onClose: () => void
   onStartAnnotation: (template: FullTemplate) => void
+}
+
+// Default thumbs up/down template
+const defaultThumbsTemplate: FullTemplate = {
+  id: "default-thumbs",
+  name: "Thumbs Up/Down",
+  version: "1",
+  thumbQuestions: [
+    { id: "1", label: "Groundedness" },
+  ],
+  sliderQuestions: [],
+  multipleChoiceQuestions: [],
+  freeFormQuestions: [],
 }
 
 // Mock existing templates with full data
@@ -127,6 +140,7 @@ const existingTemplates: FullTemplate[] = [
 export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: AnnotateDialogProps) {
   const [showCreateTemplate, setShowCreateTemplate] = useState(false)
   const [templates, setTemplates] = useState<FullTemplate[]>(existingTemplates)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [showDropdown, setShowDropdown] = useState(false)
 
@@ -156,8 +170,11 @@ export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: An
   const selectedTemplateData = templates.find((t) => t.id === selectedTemplate)
 
   const handleStartAnnotation = () => {
-    if (selectedTemplateData) {
+    if (showAdvanced && selectedTemplateData) {
       onStartAnnotation(selectedTemplateData)
+    } else {
+      // Use default thumbs up/down
+      onStartAnnotation(defaultThumbsTemplate)
     }
   }
 
@@ -193,59 +210,98 @@ export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: An
 
         {/* Content */}
         <div className="px-6 pb-6 space-y-4">
-          {/* Template Selection */}
-          <div>
-            <label className="text-sm text-foreground mb-1.5 block">
-              Select evaluation template
-            </label>
-            <div className="relative">
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="w-full flex items-center justify-between px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
-              >
-                <span className={selectedTemplateData ? "text-foreground" : "text-muted-foreground"}>
-                  {selectedTemplateData
-                    ? `${selectedTemplateData.name} (v${selectedTemplateData.version})`
-                    : "Choose a template..."}
+          {/* Default Evaluation Method */}
+          <div className="bg-secondary/50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <ThumbsUp className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-foreground">Thumbs Up/Down</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Quick evaluation with Groundedness scoring
+                </p>
+              </div>
+              {!showAdvanced && (
+                <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                  Default
                 </span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              </button>
-              
-              {showDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {templates.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => {
-                        setSelectedTemplate(template.id)
-                        setShowDropdown(false)
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
-                    >
-                      <span className="text-foreground">{template.name}</span>
-                      <span className="text-muted-foreground ml-2">(v{template.version})</span>
-                    </button>
-                  ))}
-                </div>
               )}
             </div>
           </div>
 
-          {/* Create New Template */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 border-t border-border"></div>
-            <span className="text-xs text-muted-foreground">or</span>
-            <div className="flex-1 border-t border-border"></div>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setShowCreateTemplate(true)}
-            className="w-full"
+          {/* Advanced Options Toggle */}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Template
-          </Button>
+            {showAdvanced ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            Advanced: Use evaluation template
+          </button>
+
+          {/* Advanced Template Selection */}
+          {showAdvanced && (
+            <div className="space-y-4 pl-6 border-l-2 border-border">
+              {/* Template Selection */}
+              <div>
+                <label className="text-sm text-foreground mb-1.5 block">
+                  Select evaluation template
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <span className={selectedTemplateData ? "text-foreground" : "text-muted-foreground"}>
+                      {selectedTemplateData
+                        ? `${selectedTemplateData.name} (v${selectedTemplateData.version})`
+                        : "Choose a template..."}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                  
+                  {showDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {templates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => {
+                            setSelectedTemplate(template.id)
+                            setShowDropdown(false)
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                        >
+                          <span className="text-foreground">{template.name}</span>
+                          <span className="text-muted-foreground ml-2">(v{template.version})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Create New Template */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 border-t border-border"></div>
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 border-t border-border"></div>
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateTemplate(true)}
+                className="w-full"
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Template
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -253,7 +309,7 @@ export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: An
           <Button
             variant="secondary"
             onClick={handleStartAnnotation}
-            disabled={!selectedTemplate}
+            disabled={showAdvanced && !selectedTemplate}
             className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-secondary disabled:text-muted-foreground"
           >
             Start Annotation
