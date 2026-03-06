@@ -21,7 +21,7 @@ interface AnnotationResult {
 }
 
 interface TracesTableProps {
-  onAnnotationComplete: (results: AnnotationResult[], templateName: string) => void
+  onAnnotationComplete: (results: AnnotationResult[], templateName: string, templateData: FullTemplate) => void
 }
 
 // Generate mock trace data with Microsoft Foundry support questions
@@ -275,7 +275,8 @@ export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
         ...r,
         id: `${r.traceId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       }))
-      onAnnotationComplete(resultsWithIds, selectedTemplate.name)
+      // Pass full template data so scores can be properly displayed
+      onAnnotationComplete(resultsWithIds, selectedTemplate.name, selectedTemplate)
     }
     setShowAnnotationWizard(false)
     setSelectedTemplate(null)

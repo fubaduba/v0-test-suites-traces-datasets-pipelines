@@ -92,27 +92,47 @@ export default function AgentMonitoringPage() {
     setEvaluationTemplates([...evaluationTemplates, newTemplate])
   }
 
-  const handleAnnotationComplete = (results: EvaluationResult[], templateName: string) => {
+  const handleAnnotationComplete = (
+    results: EvaluationResult[],
+    templateName: string,
+    templateData: {
+      thumbQuestions: ThumbQuestion[]
+      sliderQuestions: SliderQuestion[]
+      multipleChoiceQuestions: MultipleChoiceQuestion[]
+      freeFormQuestions: FreeFormQuestion[]
+    }
+  ) => {
     // Find or create the template in evaluation templates
     const existingIndex = evaluationTemplates.findIndex(
       (t) => t.name.toLowerCase() === templateName.toLowerCase()
     )
 
     if (existingIndex >= 0) {
-      // Add results to existing template
+      // Add results to existing template and update questions if they don't exist
       setEvaluationTemplates(
         evaluationTemplates.map((t, i) =>
           i === existingIndex
-            ? { ...t, results: [...t.results, ...results] }
+            ? {
+                ...t,
+                thumbQuestions: t.thumbQuestions?.length ? t.thumbQuestions : templateData.thumbQuestions,
+                sliderQuestions: t.sliderQuestions?.length ? t.sliderQuestions : templateData.sliderQuestions,
+                multipleChoiceQuestions: t.multipleChoiceQuestions?.length ? t.multipleChoiceQuestions : templateData.multipleChoiceQuestions,
+                freeFormQuestions: t.freeFormQuestions?.length ? t.freeFormQuestions : templateData.freeFormQuestions,
+                results: [...t.results, ...results],
+              }
             : t
         )
       )
     } else {
-      // Create new template with results
+      // Create new template with results and full template data
       const newTemplate: EvaluationTemplate = {
         id: Date.now().toString(),
         name: templateName,
         status: "Active",
+        thumbQuestions: templateData.thumbQuestions,
+        sliderQuestions: templateData.sliderQuestions,
+        multipleChoiceQuestions: templateData.multipleChoiceQuestions,
+        freeFormQuestions: templateData.freeFormQuestions,
         results: results,
       }
       setEvaluationTemplates([...evaluationTemplates, newTemplate])

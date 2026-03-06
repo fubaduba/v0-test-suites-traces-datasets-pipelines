@@ -92,7 +92,13 @@ export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewPr
       {/* Content */}
       {activeSubTab === "human" && (
         <HumanEvaluationView 
-          templates={templates}
+          templates={templates.map(t => ({
+            ...t,
+            thumbQuestions: t.thumbQuestions || [],
+            sliderQuestions: t.sliderQuestions || [],
+            multipleChoiceQuestions: t.multipleChoiceQuestions || [],
+            freeFormQuestions: t.freeFormQuestions || [],
+          }))}
           onCreateTemplate={onCreateTemplate}
         />
       )}
