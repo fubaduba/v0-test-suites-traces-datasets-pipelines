@@ -31,13 +31,19 @@ interface FreeFormQuestion {
   label: string
 }
 
+interface FullTemplateData {
+  name: string
+  version: string
+  description: string
+  thumbQuestions: ThumbQuestion[]
+  sliderQuestions: SliderQuestion[]
+  multipleChoiceQuestions: MultipleChoiceQuestion[]
+  freeFormQuestions: FreeFormQuestion[]
+}
+
 interface CreateTemplateFormProps {
   onClose: () => void
-  onSave: (template: {
-    name: string
-    version: string
-    description: string
-  }) => void
+  onSave: (template: FullTemplateData) => void
 }
 
 export function CreateTemplateForm({ onClose, onSave }: CreateTemplateFormProps) {
@@ -155,7 +161,18 @@ export function CreateTemplateForm({ onClose, onSave }: CreateTemplateFormProps)
   }
 
   const handleCreate = () => {
-    onSave({ name, version, description })
+    // Only include scoring methods that are visible/enabled
+    onSave({
+      name,
+      version,
+      description,
+      thumbQuestions: showThumbSection ? thumbQuestions.filter(q => q.label.trim()) : [],
+      sliderQuestions: showSliderSection ? sliderQuestions.filter(q => q.question.trim()) : [],
+      multipleChoiceQuestions: showMultipleChoiceSection 
+        ? multipleChoiceQuestions.filter(q => q.question.trim() && q.options.some(o => o.label.trim()))
+        : [],
+      freeFormQuestions: showFreeFormSection ? freeFormQuestions.filter(q => q.label.trim()) : [],
+    })
   }
 
   return (

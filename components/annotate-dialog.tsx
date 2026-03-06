@@ -130,32 +130,23 @@ export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: An
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [showDropdown, setShowDropdown] = useState(false)
 
-  const handleCreateTemplate = (template: { name: string; version: string; description: string }) => {
+  const handleCreateTemplate = (template: {
+    name: string
+    version: string
+    description: string
+    thumbQuestions: ThumbQuestion[]
+    sliderQuestions: SliderQuestion[]
+    multipleChoiceQuestions: MultipleChoiceQuestion[]
+    freeFormQuestions: FreeFormQuestion[]
+  }) => {
     const newTemplate: FullTemplate = {
       id: Date.now().toString(),
       name: template.name,
       version: template.version,
-      thumbQuestions: [
-        { id: "1", label: "Groundedness" },
-        { id: "2", label: "Fluency" },
-      ],
-      sliderQuestions: [
-        { id: "1", question: "What is your level of agreement with this response?", range: "1 - 5" },
-      ],
-      multipleChoiceQuestions: [
-        {
-          id: "1",
-          question: "How would you rate the quality of this response?",
-          options: [
-            { id: "1", label: "Bad" },
-            { id: "2", label: "Average" },
-            { id: "3", label: "Good" },
-          ],
-        },
-      ],
-      freeFormQuestions: [
-        { id: "1", label: "Additional comments" },
-      ],
+      thumbQuestions: template.thumbQuestions,
+      sliderQuestions: template.sliderQuestions,
+      multipleChoiceQuestions: template.multipleChoiceQuestions,
+      freeFormQuestions: template.freeFormQuestions,
     }
     setTemplates([...templates, newTemplate])
     setSelectedTemplate(newTemplate.id)
