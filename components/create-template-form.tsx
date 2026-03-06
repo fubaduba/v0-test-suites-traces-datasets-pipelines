@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Trash2, Plus, ChevronDown } from "lucide-react"
+import { X, Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ThumbQuestion {
@@ -73,6 +73,12 @@ export function CreateTemplateForm({ onClose, onSave }: CreateTemplateFormProps)
   const [freeFormQuestions, setFreeFormQuestions] = useState<FreeFormQuestion[]>([
     { id: "1", label: "Additional comments" },
   ])
+
+  // Section visibility state - only thumb up/down shown by default
+  const [showThumbSection, setShowThumbSection] = useState(true)
+  const [showSliderSection, setShowSliderSection] = useState(false)
+  const [showMultipleChoiceSection, setShowMultipleChoiceSection] = useState(false)
+  const [showFreeFormSection, setShowFreeFormSection] = useState(false)
 
   const addThumbQuestion = () => {
     setThumbQuestions([
@@ -215,224 +221,272 @@ export function CreateTemplateForm({ onClose, onSave }: CreateTemplateFormProps)
 
           {/* Scoring method: thumb up/down */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Scoring method: thumb up/down
-            </label>
-            <div className="space-y-2">
-              {thumbQuestions.map((q) => (
-                <div key={q.id} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={q.label}
-                    onChange={(e) =>
-                      setThumbQuestions(
-                        thumbQuestions.map((tq) =>
-                          tq.id === q.id ? { ...tq, label: e.target.value } : tq
-                        )
-                      )
-                    }
-                    className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    onClick={() => removeThumbQuestion(q.id)}
-                    className="p-2 hover:bg-secondary/80 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addThumbQuestion}
-              className="mt-2 text-xs"
+            <button
+              onClick={() => setShowThumbSection(!showThumbSection)}
+              className="flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground transition-colors"
             >
-              Add
-            </Button>
+              {showThumbSection ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+              Scoring method: thumb up/down
+            </button>
+            {showThumbSection && (
+              <>
+                <div className="space-y-2">
+                  {thumbQuestions.map((q) => (
+                    <div key={q.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={q.label}
+                        onChange={(e) =>
+                          setThumbQuestions(
+                            thumbQuestions.map((tq) =>
+                              tq.id === q.id ? { ...tq, label: e.target.value } : tq
+                            )
+                          )
+                        }
+                        className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button
+                        onClick={() => removeThumbQuestion(q.id)}
+                        className="p-2 hover:bg-secondary/80 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addThumbQuestion}
+                  className="mt-2 text-xs"
+                >
+                  Add
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Scoring method: slider */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Scoring method: slider
-            </label>
-            <div className="space-y-2">
-              {sliderQuestions.map((q) => (
-                <div key={q.id} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={q.question}
-                    onChange={(e) =>
-                      setSliderQuestions(
-                        sliderQuestions.map((sq) =>
-                          sq.id === q.id ? { ...sq, question: e.target.value } : sq
-                        )
-                      )
-                    }
-                    className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <div className="relative">
-                    <select
-                      value={q.range}
-                      onChange={(e) =>
-                        setSliderQuestions(
-                          sliderQuestions.map((sq) =>
-                            sq.id === q.id ? { ...sq, range: e.target.value } : sq
-                          )
-                        )
-                      }
-                      className="appearance-none px-3 py-2.5 pr-8 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-                    >
-                      <option value="1 - 5">1 - 5</option>
-                      <option value="1 - 10">1 - 10</option>
-                      <option value="1 - 3">1 - 3</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  </div>
-                  <button
-                    onClick={() => removeSliderQuestion(q.id)}
-                    className="p-2 hover:bg-secondary/80 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addSliderQuestion}
-              className="mt-2 text-xs"
+            <button
+              onClick={() => setShowSliderSection(!showSliderSection)}
+              className="flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground transition-colors"
             >
-              Add
-            </Button>
+              {showSliderSection ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+              Scoring method: slider
+            </button>
+            {showSliderSection && (
+              <>
+                <div className="space-y-2">
+                  {sliderQuestions.map((q) => (
+                    <div key={q.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={q.question}
+                        onChange={(e) =>
+                          setSliderQuestions(
+                            sliderQuestions.map((sq) =>
+                              sq.id === q.id ? { ...sq, question: e.target.value } : sq
+                            )
+                          )
+                        }
+                        className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <div className="relative">
+                        <select
+                          value={q.range}
+                          onChange={(e) =>
+                            setSliderQuestions(
+                              sliderQuestions.map((sq) =>
+                                sq.id === q.id ? { ...sq, range: e.target.value } : sq
+                              )
+                            )
+                          }
+                          className="appearance-none px-3 py-2.5 pr-8 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                        >
+                          <option value="1 - 5">1 - 5</option>
+                          <option value="1 - 10">1 - 10</option>
+                          <option value="1 - 3">1 - 3</option>
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      </div>
+                      <button
+                        onClick={() => removeSliderQuestion(q.id)}
+                        className="p-2 hover:bg-secondary/80 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addSliderQuestion}
+                  className="mt-2 text-xs"
+                >
+                  Add
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Scoring method: multiple choice */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
+            <button
+              onClick={() => setShowMultipleChoiceSection(!showMultipleChoiceSection)}
+              className="flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground transition-colors"
+            >
+              {showMultipleChoiceSection ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
               Scoring method: multiple choice
-            </label>
-            <div className="space-y-3">
-              {multipleChoiceQuestions.map((q) => (
-                <div
-                  key={q.id}
-                  className="border border-border rounded-md p-3"
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={q.question}
-                      onChange={(e) =>
-                        setMultipleChoiceQuestions(
-                          multipleChoiceQuestions.map((mq) =>
-                            mq.id === q.id ? { ...mq, question: e.target.value } : mq
-                          )
-                        )
-                      }
-                      placeholder="Enter question"
-                      className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
-                    />
-                    <button
-                      onClick={() => removeMultipleChoiceQuestion(q.id)}
-                      className="p-2 hover:bg-secondary/80 rounded transition-colors"
+            </button>
+            {showMultipleChoiceSection && (
+              <>
+                <div className="space-y-3">
+                  {multipleChoiceQuestions.map((q) => (
+                    <div
+                      key={q.id}
+                      className="border border-border rounded-md p-3"
                     >
-                      <Trash2 className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                  <div className="space-y-2 ml-4">
-                    {q.options.map((option, optionIndex) => (
-                      <div key={option.id} className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground w-6">
-                          {optionIndex + 1}:
-                        </span>
+                      <div className="flex items-center gap-2 mb-3">
                         <input
                           type="text"
-                          value={option.label}
+                          value={q.question}
                           onChange={(e) =>
                             setMultipleChoiceQuestions(
                               multipleChoiceQuestions.map((mq) =>
-                                mq.id === q.id
-                                  ? {
-                                      ...mq,
-                                      options: mq.options.map((o) =>
-                                        o.id === option.id
-                                          ? { ...o, label: e.target.value }
-                                          : o
-                                      ),
-                                    }
-                                  : mq
+                                mq.id === q.id ? { ...mq, question: e.target.value } : mq
                               )
                             )
                           }
-                          className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                          placeholder="Enter question"
+                          className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
                         />
                         <button
-                          onClick={() => removeOptionFromMultipleChoice(q.id, option.id)}
+                          onClick={() => removeMultipleChoiceQuestion(q.id)}
                           className="p-2 hover:bg-secondary/80 rounded transition-colors"
                         >
                           <Trash2 className="w-4 h-4 text-muted-foreground" />
                         </button>
                       </div>
-                    ))}
-                    <button
-                      onClick={() => addOptionToMultipleChoice(q.id)}
-                      className="flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm ml-6"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+                      <div className="space-y-2 ml-4">
+                        {q.options.map((option, optionIndex) => (
+                          <div key={option.id} className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground w-6">
+                              {optionIndex + 1}:
+                            </span>
+                            <input
+                              type="text"
+                              value={option.label}
+                              onChange={(e) =>
+                                setMultipleChoiceQuestions(
+                                  multipleChoiceQuestions.map((mq) =>
+                                    mq.id === q.id
+                                      ? {
+                                          ...mq,
+                                          options: mq.options.map((o) =>
+                                            o.id === option.id
+                                              ? { ...o, label: e.target.value }
+                                              : o
+                                          ),
+                                        }
+                                      : mq
+                                  )
+                                )
+                              }
+                              className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                            />
+                            <button
+                              onClick={() => removeOptionFromMultipleChoice(q.id, option.id)}
+                              className="p-2 hover:bg-secondary/80 rounded transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => addOptionToMultipleChoice(q.id)}
+                          className="flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm ml-6"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addMultipleChoiceQuestion}
-              className="mt-2 text-xs"
-            >
-              Add
-            </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addMultipleChoiceQuestion}
+                  className="mt-2 text-xs"
+                >
+                  Add
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Scoring method: free form question */}
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">
-              Scoring method: free form question
-            </label>
-            <div className="space-y-2">
-              {freeFormQuestions.map((q) => (
-                <div key={q.id} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={q.label}
-                    onChange={(e) =>
-                      setFreeFormQuestions(
-                        freeFormQuestions.map((fq) =>
-                          fq.id === q.id ? { ...fq, label: e.target.value } : fq
-                        )
-                      )
-                    }
-                    className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    onClick={() => removeFreeFormQuestion(q.id)}
-                    className="p-2 hover:bg-secondary/80 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addFreeFormQuestion}
-              className="mt-2 text-xs"
+            <button
+              onClick={() => setShowFreeFormSection(!showFreeFormSection)}
+              className="flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground transition-colors"
             >
-              Add
-            </Button>
+              {showFreeFormSection ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+              Scoring method: free form question
+            </button>
+            {showFreeFormSection && (
+              <>
+                <div className="space-y-2">
+                  {freeFormQuestions.map((q) => (
+                    <div key={q.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={q.label}
+                        onChange={(e) =>
+                          setFreeFormQuestions(
+                            freeFormQuestions.map((fq) =>
+                              fq.id === q.id ? { ...fq, label: e.target.value } : fq
+                            )
+                          )
+                        }
+                        className="flex-1 px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button
+                        onClick={() => removeFreeFormQuestion(q.id)}
+                        className="p-2 hover:bg-secondary/80 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addFreeFormQuestion}
+                  className="mt-2 text-xs"
+                >
+                  Add
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
