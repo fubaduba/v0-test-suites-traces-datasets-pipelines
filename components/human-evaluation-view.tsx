@@ -129,40 +129,6 @@ export function HumanEvaluationView({ templates, onCreateTemplate, onDeleteTempl
 
   const scoreColumns = getScoreColumns()
 
-  // Calculate aggregate stats for a column
-  const getColumnStats = (column: { key: string; label: string; type: "thumb" | "slider" | "multipleChoice" }) => {
-    if (column.type === "thumb") {
-      let thumbsUp = 0
-      let thumbsDown = 0
-      let total = 0
-
-      allResults.forEach((result) => {
-        const question = result.template.thumbQuestions?.find((q) => q.label === column.label)
-        if (question && result.thumbAnswers[question.id] !== undefined && result.thumbAnswers[question.id] !== null) {
-          total++
-          if (result.thumbAnswers[question.id] === true) thumbsUp++
-          else thumbsDown++
-        }
-      })
-
-      if (total === 0) return null
-      const percentage = Math.round((thumbsUp / total) * 100)
-      return { thumbsUp, thumbsDown, total, percentage }
-    } else if (column.type === "slider") {
-      const values: number[] = []
-      allResults.forEach((result) => {
-        const question = result.template.sliderQuestions?.find((q) => q.question === column.label)
-        if (question && result.sliderAnswers[question.id] !== undefined) {
-          values.push(result.sliderAnswers[question.id])
-        }
-      })
-      if (values.length === 0) return null
-      const avg = values.reduce((a, b) => a + b, 0) / values.length
-      return { avg: avg.toFixed(1), count: values.length }
-    }
-    return null
-  }
-
   const getScoreValue = (
     result: EvaluationResult & { template: FullTemplateData },
     column: { key: string; label: string; type: "thumb" | "slider" | "multipleChoice" }
@@ -171,8 +137,22 @@ export function HumanEvaluationView({ templates, onCreateTemplate, onDeleteTempl
       const question = result.template.thumbQuestions?.find((q) => q.label === column.label)
       if (question && result.thumbAnswers[question.id] !== undefined) {
         const value = result.thumbAnswers[question.id]
-        if (value === true) return <span className="text-success">Positive</span>
-        if (value === false) return <span className="text-destructive">Negative</span>
+        if (value === true) {
+          return (
+            <span className="inline-flex items-center gap-1.5 text-success">
+              <span className="font-medium">100%</span>
+              <span className="text-xs text-muted-foreground">(1/1)</span>
+            </span>
+          )
+        }
+        if (value === false) {
+          return (
+            <span className="inline-flex items-center gap-1.5 text-destructive">
+              <span className="font-medium">0%</span>
+              <span className="text-xs text-muted-foreground">(0/1)</span>
+            </span>
+          )
+        }
         return <span className="text-muted-foreground">-</span>
       }
     } else if (column.type === "slider") {
@@ -274,50 +254,6 @@ export function HumanEvaluationView({ templates, onCreateTemplate, onDeleteTempl
           </Button>
         </div>
       </div>
-
-      {/* Aggregate Stats */}
-      {allResults.length > 0 && scoreColumns.length > 0 && (
-        <div className="px-6 py-3 border-b border-border bg-secondary/20">
-          <div className="flex items-center gap-6 flex-wrap">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Aggregate Scores:
-            </span>
-            {scoreColumns.map((col) => {
-              const stats = getColumnStats(col)
-              if (!stats) return null
-              
-              if (col.type === "thumb" && "percentage" in stats) {
-                return (
-                  <div key={col.key} className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{col.label}:</span>
-                    <div className="flex items-center gap-1">
-                      <span className={`text-sm font-medium ${
-                        stats.percentage >= 70 ? "text-success" : 
-                        stats.percentage >= 40 ? "text-yellow-500" : "text-destructive"
-                      }`}>
-                        {stats.percentage}%
-                      </span>
-                      <span className="text-xs text-muted-foreground">positive</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      ({stats.thumbsUp}/{stats.total})
-                    </span>
-                  </div>
-                )
-              } else if (col.type === "slider" && "avg" in stats) {
-                return (
-                  <div key={col.key} className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{col.label.length > 20 ? col.label.substring(0, 20) + "..." : col.label}:</span>
-                    <span className="text-sm font-medium text-foreground">{stats.avg}</span>
-                    <span className="text-xs text-muted-foreground">avg ({stats.count} responses)</span>
-                  </div>
-                )
-              }
-              return null
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Results Table */}
       <div className="flex-1 overflow-auto">
