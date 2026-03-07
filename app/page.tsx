@@ -57,11 +57,10 @@ export default function AgentMonitoringPage() {
   const [evaluationTemplates, setEvaluationTemplates] = useState<EvaluationTemplate[]>([
     {
       id: "1",
-      name: "test",
+      name: "Thumbs Up/Down",
       status: "Active",
       thumbQuestions: [
-        { id: "1", label: "Groundedness" },
-        { id: "2", label: "Fluency" },
+        { id: "1", label: "Response Quality" },
       ],
       sliderQuestions: [],
       multipleChoiceQuestions: [],

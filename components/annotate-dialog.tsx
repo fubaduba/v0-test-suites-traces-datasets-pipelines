@@ -54,7 +54,7 @@ const defaultThumbsTemplate: FullTemplate = {
   name: "Thumbs Up/Down",
   version: "1",
   thumbQuestions: [
-    { id: "1", label: "Groundedness" },
+    { id: "1", label: "Response Quality" },
   ],
   sliderQuestions: [],
   multipleChoiceQuestions: [],
@@ -219,7 +219,7 @@ export function AnnotateDialog({ selectedCount, onClose, onStartAnnotation }: An
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-foreground">Thumbs Up/Down</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Quick evaluation with Groundedness scoring
+                  Quick evaluation of response quality
                 </p>
               </div>
               {!showAdvanced && (
