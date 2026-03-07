@@ -621,12 +621,13 @@ export function AutomaticEvaluationView() {
         </div>
 
         {/* Annotate Dialog */}
-        <AnnotateDialog
-          isOpen={showAnnotateDialog}
-          onClose={() => setShowAnnotateDialog(false)}
-          selectedTraceCount={selectedRuns.size}
-          onStartAnnotation={handleStartAnnotation}
-        />
+        {showAnnotateDialog && (
+          <AnnotateDialog
+            selectedCount={selectedRuns.size}
+            onClose={() => setShowAnnotateDialog(false)}
+            onStartAnnotation={handleStartAnnotation}
+          />
+        )}
 
         {/* Annotation Wizard */}
         {showAnnotationWizard && selectedTemplate && (
