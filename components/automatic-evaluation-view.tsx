@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Search, CheckCircle2, ChevronLeft, ChevronRight, Plus, X, ArrowLeft, ChevronDown, Download, AlertCircle, FileText, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
+import { AnnotationWizard } from "./annotation-wizard"
 
 interface AutomaticEvaluation {
   id: string
@@ -309,7 +311,9 @@ export function AutomaticEvaluationView() {
   const [selectedEvaluation, setSelectedEvaluation] = useState<AutomaticEvaluation | null>(null)
   const [showEvaluationDetails, setShowEvaluationDetails] = useState(true)
   const [selectedRuns, setSelectedRuns] = useState<Set<string>>(new Set())
-  const [showAnnotateModal, setShowAnnotateModal] = useState(false)
+  const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
+  const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
 
   const filteredEvaluations = mockEvaluations.filter((evaluation) =>
     evaluation.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -347,6 +351,33 @@ export function AutomaticEvaluationView() {
     if (percentage >= 80) return "text-success"
     if (percentage >= 50) return "text-yellow-500"
     return "text-destructive"
+  }
+
+  // Generate trace data from selected evaluation runs for annotation
+  const getTracesFromSelectedRuns = () => {
+    const selectedRunsList = mockEvaluationRuns.filter(run => selectedRuns.has(run.id))
+    return selectedRunsList.map((run, index) => ({
+      id: run.id,
+      conversationId: `conv_${run.id}_${run.name.replace(/\s+/g, '_')}`,
+      traceId: `trace_${run.id}_${Date.now()}`,
+      responseId: `resp_${run.id}_${Date.now()}`,
+      startTime: run.createdOn,
+      input: `Evaluation run input for ${run.name} targeting ${run.target}. Dataset: ${run.dataset} (${run.datasetVersion}). This run processed ${run.promptTokens.toLocaleString()} prompt tokens and generated ${run.completionTokens.toLocaleString()} completion tokens.`,
+      output: `Evaluation Results Summary:\n\n- Groundedness: ${run.groundedness.percentage}% (${run.groundedness.count})\n- Coherence: ${run.coherence.percentage}% (${run.coherence.count})\n- Relevance: ${run.relevance.percentage}% (${run.relevance.count})\n- Deflection Score: ${run.deflectionScore.percentage}% (${run.deflectionScore.count})\n- Escalation Sentiment: ${run.escalationSentiment.percentage}% (${run.escalationSentiment.count})\n\nStatus: ${run.status}\nCreated by: ${run.createdBy}`,
+    }))
+  }
+
+  const handleStartAnnotation = (template: FullTemplate) => {
+    setSelectedTemplate(template)
+    setShowAnnotateDialog(false)
+    setShowAnnotationWizard(true)
+  }
+
+  const handleAnnotationComplete = (results: unknown[]) => {
+    setShowAnnotationWizard(false)
+    setSelectedTemplate(null)
+    setSelectedRuns(new Set())
+    alert(`Annotation completed for ${results.length} evaluation run(s)!`)
   }
 
   // Detail View
@@ -441,7 +472,7 @@ export function AutomaticEvaluationView() {
                 variant="ghost"
                 size="sm"
                 disabled={selectedRuns.size === 0}
-                onClick={() => setShowAnnotateModal(true)}
+                onClick={() => setShowAnnotateDialog(true)}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-50"
               >
                 <FileText className="w-4 h-4 mr-1.5" />
@@ -589,58 +620,25 @@ export function AutomaticEvaluationView() {
           </button>
         </div>
 
-        {/* Annotate Modal */}
-        {showAnnotateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card rounded-lg w-full max-w-lg mx-4">
-              <div className="flex items-center justify-between p-6 border-b border-border">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Annotate Traces
-                </h2>
-                <button
-                  onClick={() => setShowAnnotateModal(false)}
-                  className="p-1 hover:bg-secondary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-muted-foreground" />
-                </button>
-              </div>
-              <div className="p-6">
-                <p className="text-sm text-muted-foreground mb-4">
-                  You have selected {selectedRuns.size} evaluation run{selectedRuns.size !== 1 ? "s" : ""} for annotation.
-                  This will allow you to review and annotate the traces from these runs.
-                </p>
-                <div className="bg-secondary/30 rounded-lg p-4 mb-4">
-                  <h3 className="text-sm font-medium text-foreground mb-2">Selected runs:</h3>
-                  <ul className="text-sm text-muted-foreground space-y-1 max-h-32 overflow-y-auto">
-                    {Array.from(selectedRuns).map((runId) => {
-                      const run = mockEvaluationRuns.find((r) => r.id === runId)
-                      return run ? (
-                        <li key={runId}>
-                          {run.name} - {run.createdOn}
-                        </li>
-                      ) : null
-                    })}
-                  </ul>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  The traces from these runs will be loaded for human evaluation using your preferred annotation template.
-                </p>
-              </div>
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
-                <Button variant="outline" onClick={() => setShowAnnotateModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowAnnotateModal(false)
-                    alert(`Starting annotation for ${selectedRuns.size} run(s). This would navigate to the annotation workflow.`)
-                  }}
-                >
-                  Start Annotation
-                </Button>
-              </div>
-            </div>
-          </div>
+        {/* Annotate Dialog */}
+        <AnnotateDialog
+          isOpen={showAnnotateDialog}
+          onClose={() => setShowAnnotateDialog(false)}
+          selectedTraceCount={selectedRuns.size}
+          onStartAnnotation={handleStartAnnotation}
+        />
+
+        {/* Annotation Wizard */}
+        {showAnnotationWizard && selectedTemplate && (
+          <AnnotationWizard
+            traces={getTracesFromSelectedRuns()}
+            template={selectedTemplate}
+            onComplete={handleAnnotationComplete}
+            onClose={() => {
+              setShowAnnotationWizard(false)
+              setSelectedTemplate(null)
+            }}
+          />
         )}
       </div>
     )
