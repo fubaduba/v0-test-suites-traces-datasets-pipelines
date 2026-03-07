@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { HumanEvaluationView } from "./human-evaluation-view"
+import { AutomaticEvaluationView } from "./automatic-evaluation-view"
 
 interface EvaluationResult {
   id: string
@@ -103,11 +104,7 @@ export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewPr
         />
       )}
 
-      {activeSubTab === "automatic" && (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          Automatic Evaluation content coming soon
-        </div>
-      )}
+      {activeSubTab === "automatic" && <AutomaticEvaluationView />}
 
       {activeSubTab === "redteam" && (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
