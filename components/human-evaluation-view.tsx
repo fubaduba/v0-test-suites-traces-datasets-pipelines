@@ -421,20 +421,20 @@ export function HumanEvaluationView({ templates, onCreateTemplate, onDeleteTempl
                   className="w-full p-4 text-left bg-secondary/30 hover:bg-secondary/50 rounded-lg border border-border transition-colors group"
                   onClick={() => {
                     setShowOptimizeModal(false)
-                    alert("Fine-tune Agent: This would use the selected results (especially highly-rated responses) to fine-tune the underlying model.")
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-5 h-5 text-chart-4" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground group-hover:text-chart-4 transition-colors">
-                        Fine-tune Agent
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Use highly-rated responses as training examples to fine-tune the agent&apos;s underlying model for improved performance.
-                      </p>
+alert("Optimize Agent: This would analyze the selected results to suggest prompt improvements for better response quality.")
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5 text-chart-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-foreground group-hover:text-chart-4 transition-colors">
+                          Optimize Agent
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Analyze evaluation patterns to suggest prompt optimizations, system instruction improvements, and response guidelines.
+                        </p>
                     </div>
                   </div>
                 </button>
