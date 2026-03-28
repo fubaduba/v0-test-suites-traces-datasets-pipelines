@@ -254,6 +254,26 @@ export function AnnotationWizard({ traces, template, onClose, onComplete }: Anno
                   </div>
                 ))}
               </div>
+              
+              {/* Additional comments directly under thumbs */}
+              {template.freeFormQuestions.length > 0 && (
+                <div className="mt-4">
+                  {template.freeFormQuestions.map((q) => (
+                    <div key={q.id}>
+                      <label className="text-sm text-muted-foreground mb-1.5 block">
+                        {q.label}
+                      </label>
+                      <textarea
+                        value={currentAnnotation.freeFormAnswers[q.id] || ""}
+                        onChange={(e) => handleFreeFormAnswer(q.id, e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary resize-none"
+                        placeholder="Enter your feedback..."
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -323,8 +343,8 @@ export function AnnotationWizard({ traces, template, onClose, onComplete }: Anno
             </div>
           )}
 
-          {/* Free form questions */}
-          {template.freeFormQuestions.length > 0 && (
+          {/* Free form questions (only show if no thumb questions, otherwise shown under thumbs) */}
+          {template.freeFormQuestions.length > 0 && template.thumbQuestions.length === 0 && (
             <div>
               <h3 className="text-sm font-medium text-foreground mb-3">
                 Free Form Feedback

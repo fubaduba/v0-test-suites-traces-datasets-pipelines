@@ -58,7 +58,9 @@ const defaultThumbsTemplate: FullTemplate = {
   ],
   sliderQuestions: [],
   multipleChoiceQuestions: [],
-  freeFormQuestions: [],
+  freeFormQuestions: [
+    { id: "comments", label: "Additional comments (optional)" },
+  ],
 }
 
 // Mock existing templates with full data
