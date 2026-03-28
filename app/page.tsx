@@ -52,8 +52,17 @@ interface EvaluationTemplate {
   results: EvaluationResult[]
 }
 
+// Store annotations by trace ID
+interface TraceAnnotation {
+  traceId: string
+  annotation: boolean | null // thumbs up = true, thumbs down = false
+  comments: string
+  timestamp: string
+}
+
 export default function AgentMonitoringPage() {
   const [activeTab, setActiveTab] = useState("traces")
+  const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({})
   const [evaluationTemplates, setEvaluationTemplates] = useState<EvaluationTemplate[]>([
     {
       id: "1",
@@ -137,8 +146,25 @@ export default function AgentMonitoringPage() {
       setEvaluationTemplates([...evaluationTemplates, newTemplate])
     }
 
-    // Switch to evaluation tab to show results
-    setActiveTab("evaluation")
+    // Store annotations for display in traces table
+    const newAnnotations: Record<string, TraceAnnotation> = { ...traceAnnotations }
+    results.forEach((result) => {
+      // Get the thumbs up/down value (assuming "1" is the Response Quality question ID)
+      const thumbValue = result.thumbAnswers["1"] ?? null
+      // Get comments (assuming "comments" is the additional comments question ID)
+      const comments = result.freeFormAnswers["comments"] || ""
+      
+      newAnnotations[result.traceId] = {
+        traceId: result.traceId,
+        annotation: thumbValue,
+        comments: comments,
+        timestamp: result.timestamp,
+      }
+    })
+    setTraceAnnotations(newAnnotations)
+
+    // Stay on traces tab to show the annotations
+    // setActiveTab("evaluation") - removed, stay on traces
   }
 
   return (
@@ -156,7 +182,10 @@ export default function AgentMonitoringPage() {
 
         {/* Content based on active tab */}
         {activeTab === "traces" && (
-          <TracesTable onAnnotationComplete={handleAnnotationComplete} />
+          <TracesTable 
+            onAnnotationComplete={handleAnnotationComplete} 
+            annotations={traceAnnotations}
+          />
         )}
 
         {activeTab === "evaluation" && (

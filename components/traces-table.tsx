@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag } from "lucide-react"
+import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
@@ -20,8 +20,16 @@ interface AnnotationResult {
   freeFormAnswers: Record<string, string>
 }
 
+interface TraceAnnotation {
+  traceId: string
+  annotation: boolean | null
+  comments: string
+  timestamp: string
+}
+
 interface TracesTableProps {
   onAnnotationComplete: (results: AnnotationResult[], templateName: string, templateData: FullTemplate) => void
+  annotations?: Record<string, TraceAnnotation>
 }
 
 // Generate mock trace data with Microsoft Foundry support questions
@@ -235,7 +243,7 @@ const traces = generateTraceData()
 
 const timeFilters = ["Last Day", "7D", "1M", "3M"]
 
-export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
+export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
   const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
@@ -414,6 +422,18 @@ export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
               </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                 <div className="flex items-center gap-1">
+                  Annotation
+                  <HelpCircle className="w-3.5 h-3.5" />
+                </div>
+              </th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  Comments
+                  <HelpCircle className="w-3.5 h-3.5" />
+                </div>
+              </th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">
+                <div className="flex items-center gap-1">
                   Evaluation
                   <HelpCircle className="w-3.5 h-3.5" />
                 </div>
@@ -473,6 +493,41 @@ export function TracesTable({ onAnnotationComplete }: TracesTableProps) {
                 <td className="px-4 py-3 text-xs text-foreground">{trace.tokensOut}</td>
                 <td className="px-4 py-3 text-xs text-foreground">
                   {trace.cost.toFixed(3)}
+                </td>
+                <td className="px-4 py-3">
+                  {annotations[trace.traceId] ? (
+                    <div className="flex items-center gap-1.5">
+                      {annotations[trace.traceId].annotation === true && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-success/10 rounded">
+                          <ThumbsUp className="w-3.5 h-3.5 text-success" />
+                          <span className="text-xs text-success">Positive</span>
+                        </div>
+                      )}
+                      {annotations[trace.traceId].annotation === false && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 rounded">
+                          <ThumbsDown className="w-3.5 h-3.5 text-destructive" />
+                          <span className="text-xs text-destructive">Negative</span>
+                        </div>
+                      )}
+                      {annotations[trace.traceId].annotation === null && (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {annotations[trace.traceId]?.comments ? (
+                    <div className="flex items-center gap-1.5 max-w-[150px]">
+                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-foreground truncate" title={annotations[trace.traceId].comments}>
+                        {annotations[trace.traceId].comments}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-1.5">
