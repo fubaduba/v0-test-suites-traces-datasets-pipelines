@@ -246,11 +246,30 @@ const traces = generateTraceData()
 
 const timeFilters = ["Last Day", "7D", "1M", "3M"]
 
-// Mock existing datasets
+// Mock eval suites with evaluators
+const evalSuites = [
+  {
+    id: "suite-1",
+    name: "Twitter Support Quality",
+    evaluators: ["Groundedness", "Coherence", "Relevance", "Response Quality"],
+  },
+  {
+    id: "suite-2",
+    name: "Customer Satisfaction",
+    evaluators: ["Deflection Score", "Escalation Sentiment", "Resolution Rate"],
+  },
+  {
+    id: "suite-3",
+    name: "Safety & Compliance",
+    evaluators: ["Content Safety", "PII Detection", "Brand Guidelines"],
+  },
+]
+
+// Mock existing datasets with eval suite associations
 const existingDatasets = [
-  { id: "1", name: "twitter-eval-dataset", version: "Version 1", count: 150 },
-  { id: "2", name: "support-golden-set", version: "Version 2", count: 75 },
-  { id: "3", name: "edge-cases-dataset", version: "Version 1", count: 42 },
+  { id: "1", name: "twitter-eval-dataset", version: "Version 1", count: 150, evalSuiteId: "suite-1" },
+  { id: "2", name: "support-golden-set", version: "Version 2", count: 75, evalSuiteId: "suite-2" },
+  { id: "3", name: "edge-cases-dataset", version: "Version 1", count: 42, evalSuiteId: "suite-3" },
 ]
 
 export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTableProps) {
@@ -689,29 +708,59 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
                     Select dataset
                   </label>
                   <div className="space-y-2">
-                    {existingDatasets.map((dataset) => (
-                      <button
-                        key={dataset.id}
-                        onClick={() => setSelectedDataset(dataset.id)}
-                        className={`w-full p-3 rounded-lg border transition-colors text-left flex items-center justify-between ${
-                          selectedDataset === dataset.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground/50"
-                        }`}
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-foreground">
-                            {dataset.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {dataset.version}
-                          </span>
+                    {existingDatasets.map((dataset) => {
+                      const evalSuite = evalSuites.find(s => s.id === dataset.evalSuiteId)
+                      return (
+                        <div key={dataset.id} className="group relative">
+                          <button
+                            onClick={() => setSelectedDataset(dataset.id)}
+                            className={`w-full p-3 rounded-lg border transition-colors text-left ${
+                              selectedDataset === dataset.id
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-muted-foreground/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div>
+                                <span className="text-sm font-medium text-foreground">
+                                  {dataset.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {dataset.version}
+                                </span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {dataset.count} items
+                              </span>
+                            </div>
+                            {evalSuite && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-muted-foreground">Eval Suite:</span>
+                                <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+                                  {evalSuite.name}
+                                </span>
+                              </div>
+                            )}
+                          </button>
+                          {/* Hover tooltip showing evaluators */}
+                          {evalSuite && (
+                            <div className="absolute left-full top-0 ml-2 p-3 bg-popover border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 w-56">
+                              <p className="text-xs font-medium text-foreground mb-2">
+                                Evaluators in {evalSuite.name}:
+                              </p>
+                              <ul className="space-y-1">
+                                {evalSuite.evaluators.map((evaluator, idx) => (
+                                  <li key={idx} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                    <span className="w-1 h-1 rounded-full bg-primary" />
+                                    {evaluator}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {dataset.count} items
-                        </span>
-                      </button>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
