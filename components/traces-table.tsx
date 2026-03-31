@@ -646,7 +646,7 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
       {/* Promote to Dataset Dialog */}
       {showDatasetDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-card rounded-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col overflow-x-hidden">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
@@ -744,7 +744,7 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
                           </button>
                           {/* Hover tooltip showing evaluators */}
                           {evalSuite && (
-                            <div className="absolute left-full top-0 ml-2 p-3 bg-popover border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 w-56">
+                            <div className="absolute right-0 top-full mt-1 p-3 bg-popover border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 w-56">
                               <p className="text-xs font-medium text-foreground mb-2">
                                 Evaluators in {evalSuite.name}:
                               </p>
