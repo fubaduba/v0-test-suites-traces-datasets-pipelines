@@ -58,11 +58,61 @@ interface TraceAnnotation {
   annotation: boolean | null // thumbs up = true, thumbs down = false
   comments: string
   timestamp: string
+  feedbackKind: "thumbs" | "rating" | "text"
+  source: "builder" | "end-user"
+  userId: number
 }
 
 export default function AgentMonitoringPage() {
   const [activeTab, setActiveTab] = useState("traces")
-  const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({})
+  const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({
+    // Prepopulated end-user annotations
+    "7a6bf85a13a84c58b38d001f6e973870": {
+      traceId: "7a6bf85a13a84c58b38d001f6e973870",
+      annotation: true,
+      comments: "Very helpful response!",
+      timestamp: "3/5/26, 12:30:15 PM",
+      feedbackKind: "thumbs",
+      source: "end-user",
+      userId: 10842,
+    },
+    "04d96fd4fdf19f69d0a55a6a5c22a5f0": {
+      traceId: "04d96fd4fdf19f69d0a55a6a5c22a5f0",
+      annotation: true,
+      comments: "",
+      timestamp: "3/5/26, 9:25:00 AM",
+      feedbackKind: "thumbs",
+      source: "end-user",
+      userId: 10843,
+    },
+    "110169b515f177fead90686d80caef4a": {
+      traceId: "110169b515f177fead90686d80caef4a",
+      annotation: false,
+      comments: "Response was too long and confusing",
+      timestamp: "3/5/26, 9:24:30 AM",
+      feedbackKind: "thumbs",
+      source: "end-user",
+      userId: 10844,
+    },
+    "a0566515dd63b9d27e34679210b34b39": {
+      traceId: "a0566515dd63b9d27e34679210b34b39",
+      annotation: true,
+      comments: "",
+      timestamp: "3/5/26, 9:24:00 AM",
+      feedbackKind: "thumbs",
+      source: "end-user",
+      userId: 10845,
+    },
+    "62ee87ceaeab8eaaf1c9f7a3184a770f": {
+      traceId: "62ee87ceaeab8eaaf1c9f7a3184a770f",
+      annotation: false,
+      comments: "Did not answer my question",
+      timestamp: "3/5/26, 9:23:45 AM",
+      feedbackKind: "thumbs",
+      source: "end-user",
+      userId: 10846,
+    },
+  })
   const [evaluationTemplates, setEvaluationTemplates] = useState<EvaluationTemplate[]>([
     {
       id: "1",
@@ -159,6 +209,9 @@ export default function AgentMonitoringPage() {
         annotation: thumbValue,
         comments: comments,
         timestamp: result.timestamp,
+        feedbackKind: "thumbs",
+        source: "builder",
+        userId: 1001, // Current builder user ID
       }
     })
     setTraceAnnotations(newAnnotations)

@@ -25,6 +25,9 @@ interface TraceAnnotation {
   annotation: boolean | null
   comments: string
   timestamp: string
+  feedbackKind: "thumbs" | "rating" | "text"
+  source: "builder" | "end-user"
+  userId: number
 }
 
 interface TracesTableProps {
@@ -428,12 +431,6 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
               </th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  Comments
-                  <HelpCircle className="w-3.5 h-3.5" />
-                </div>
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">
-                <div className="flex items-center gap-1">
                   Evaluation
                   <HelpCircle className="w-3.5 h-3.5" />
                 </div>
@@ -496,34 +493,46 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
                 </td>
                 <td className="px-4 py-3">
                   {annotations[trace.traceId] ? (
-                    <div className="flex items-center gap-1.5">
-                      {annotations[trace.traceId].annotation === true && (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-success/10 rounded">
-                          <ThumbsUp className="w-3.5 h-3.5 text-success" />
-                          <span className="text-xs text-success">Positive</span>
+                    <div className="flex flex-col gap-1 max-w-[220px]">
+                      {/* Thumbs feedback row */}
+                      <div className="flex items-center gap-2">
+                        {annotations[trace.traceId].annotation === true && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-success/10 rounded">
+                            <ThumbsUp className="w-3 h-3 text-success" />
+                            <span className="text-xs text-success">Positive</span>
+                          </div>
+                        )}
+                        {annotations[trace.traceId].annotation === false && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-destructive/10 rounded">
+                            <ThumbsDown className="w-3 h-3 text-destructive" />
+                            <span className="text-xs text-destructive">Negative</span>
+                          </div>
+                        )}
+                        {/* Feedback kind badge */}
+                        <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                          {annotations[trace.traceId].feedbackKind}
+                        </span>
+                      </div>
+                      {/* Source and User ID row */}
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className={`px-1.5 py-0.5 rounded ${
+                          annotations[trace.traceId].source === "end-user" 
+                            ? "bg-primary/10 text-primary" 
+                            : "bg-secondary text-muted-foreground"
+                        }`}>
+                          {annotations[trace.traceId].source}
+                        </span>
+                        <span>user: {annotations[trace.traceId].userId}</span>
+                      </div>
+                      {/* Comments row (if exists) */}
+                      {annotations[trace.traceId].comments && (
+                        <div className="flex items-start gap-1 mt-0.5">
+                          <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
+                          <span className="text-xs text-foreground/80 line-clamp-2" title={annotations[trace.traceId].comments}>
+                            {annotations[trace.traceId].comments}
+                          </span>
                         </div>
                       )}
-                      {annotations[trace.traceId].annotation === false && (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 rounded">
-                          <ThumbsDown className="w-3.5 h-3.5 text-destructive" />
-                          <span className="text-xs text-destructive">Negative</span>
-                        </div>
-                      )}
-                      {annotations[trace.traceId].annotation === null && (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {annotations[trace.traceId]?.comments ? (
-                    <div className="flex items-center gap-1.5 max-w-[150px]">
-                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <span className="text-xs text-foreground truncate" title={annotations[trace.traceId].comments}>
-                        {annotations[trace.traceId].comments}
-                      </span>
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">-</span>
