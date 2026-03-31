@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react"
+import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare, Database, X, Plus, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
@@ -246,11 +246,23 @@ const traces = generateTraceData()
 
 const timeFilters = ["Last Day", "7D", "1M", "3M"]
 
+// Mock existing datasets
+const existingDatasets = [
+  { id: "1", name: "twitter-eval-dataset", version: "Version 1", count: 150 },
+  { id: "2", name: "support-golden-set", version: "Version 2", count: 75 },
+  { id: "3", name: "edge-cases-dataset", version: "Version 1", count: 42 },
+]
+
 export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
   const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
+  const [showDatasetDialog, setShowDatasetDialog] = useState(false)
+  const [datasetMode, setDatasetMode] = useState<"append" | "create">("append")
+  const [selectedDataset, setSelectedDataset] = useState<string>("")
+  const [newDatasetName, setNewDatasetName] = useState("")
+  const [useAnnotationsForGroundtruth, setUseAnnotationsForGroundtruth] = useState(true)
 
   const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows)
@@ -318,8 +330,24 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           </Button>
         </div>
 
-        {/* Annotate button and Date range */}
+        {/* Promote to Dataset, Annotate button and Date range */}
         <div className="flex items-center gap-2">
+          {/* Promote to Dataset Button */}
+          <Button
+            variant="outline"
+            className="text-sm"
+            disabled={selectedRows.size === 0}
+            onClick={() => setShowDatasetDialog(true)}
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Promote to Dataset
+            {selectedRows.size > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded">
+                {selectedRows.size}
+              </span>
+            )}
+          </Button>
+
           {/* Annotate Button */}
           <Button
             variant="outline"
@@ -594,6 +622,178 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           }}
           onComplete={handleAnnotationComplete}
         />
+      )}
+
+      {/* Promote to Dataset Dialog */}
+      {showDatasetDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Promote to Dataset
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Add {selectedRows.size} trace{selectedRows.size !== 1 ? "s" : ""} to an evaluation dataset
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDatasetDialog(false)}
+                className="p-1 hover:bg-secondary rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Mode Selection */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDatasetMode("append")}
+                  className={`flex-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                    datasetMode === "append"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Plus className="w-4 h-4" />
+                    <span className="font-medium text-foreground">Append to existing</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Add traces to an existing dataset
+                  </p>
+                </button>
+                <button
+                  onClick={() => setDatasetMode("create")}
+                  className={`flex-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                    datasetMode === "create"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Database className="w-4 h-4" />
+                    <span className="font-medium text-foreground">Create new dataset</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Create a new dataset with these traces
+                  </p>
+                </button>
+              </div>
+
+              {/* Append Mode: Select existing dataset */}
+              {datasetMode === "append" && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Select dataset
+                  </label>
+                  <div className="space-y-2">
+                    {existingDatasets.map((dataset) => (
+                      <button
+                        key={dataset.id}
+                        onClick={() => setSelectedDataset(dataset.id)}
+                        className={`w-full p-3 rounded-lg border transition-colors text-left flex items-center justify-between ${
+                          selectedDataset === dataset.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <div>
+                          <span className="text-sm font-medium text-foreground">
+                            {dataset.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {dataset.version}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {dataset.count} items
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Create Mode: New dataset name */}
+              {datasetMode === "create" && (
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Dataset name
+                  </label>
+                  <input
+                    type="text"
+                    value={newDatasetName}
+                    onChange={(e) => setNewDatasetName(e.target.value)}
+                    placeholder="e.g., twitter-support-golden-set"
+                    className="w-full px-3 py-2.5 bg-secondary border-0 rounded-md text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              )}
+
+              {/* Auto-generate groundtruth option */}
+              <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="use-annotations"
+                    checked={useAnnotationsForGroundtruth}
+                    onCheckedChange={(checked) => setUseAnnotationsForGroundtruth(!!checked)}
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="use-annotations"
+                      className="text-sm font-medium text-foreground cursor-pointer flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      Use annotations to auto-generate groundtruth
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Traces with positive annotations will be used as expected outputs.
+                      Negative annotations will be flagged for review.
+                    </p>
+                    {useAnnotationsForGroundtruth && (
+                      <div className="mt-3 p-2 bg-secondary rounded text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">Preview:</span>{" "}
+                        {selectedTraces.filter(t => annotations[t.traceId]?.annotation === true).length} positive,{" "}
+                        {selectedTraces.filter(t => annotations[t.traceId]?.annotation === false).length} negative,{" "}
+                        {selectedTraces.filter(t => !annotations[t.traceId]).length} unannotated traces selected
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
+              <Button variant="outline" onClick={() => setShowDatasetDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                disabled={
+                  (datasetMode === "append" && !selectedDataset) ||
+                  (datasetMode === "create" && !newDatasetName.trim())
+                }
+                onClick={() => {
+                  const datasetName = datasetMode === "append"
+                    ? existingDatasets.find(d => d.id === selectedDataset)?.name
+                    : newDatasetName
+                  alert(
+                    `${datasetMode === "append" ? "Appending" : "Creating"} ${selectedRows.size} traces to dataset "${datasetName}"${
+                      useAnnotationsForGroundtruth ? " with auto-generated groundtruth from annotations" : ""
+                    }`
+                  )
+                  setShowDatasetDialog(false)
+                  setSelectedRows(new Set())
+                  setSelectedDataset("")
+                  setNewDatasetName("")
+                }}
+              >
+                {datasetMode === "append" ? "Add to Dataset" : "Create Dataset"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
