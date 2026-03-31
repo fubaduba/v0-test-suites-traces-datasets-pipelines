@@ -349,9 +349,9 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           </Button>
         </div>
 
-        {/* Promote to Dataset, Annotate button and Date range */}
+        {/* Add to Dataset, Annotate button and Date range */}
         <div className="flex items-center gap-2">
-          {/* Promote to Dataset Button */}
+          {/* Add to Dataset Button */}
           <Button
             variant="outline"
             className="text-sm"
@@ -359,7 +359,7 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
             onClick={() => setShowDatasetDialog(true)}
           >
             <Database className="w-4 h-4 mr-2" />
-            Promote to Dataset
+            Add to Dataset
             {selectedRows.size > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded">
                 {selectedRows.size}
@@ -540,46 +540,40 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
                 </td>
                 <td className="px-4 py-3">
                   {annotations[trace.traceId] ? (
-                    <div className="flex flex-col gap-1 max-w-[220px]">
-                      {/* Thumbs feedback row */}
-                      <div className="flex items-center gap-2">
-                        {annotations[trace.traceId].annotation === true && (
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-success/10 rounded">
-                            <ThumbsUp className="w-3 h-3 text-success" />
-                            <span className="text-xs text-success">Positive</span>
-                          </div>
-                        )}
-                        {annotations[trace.traceId].annotation === false && (
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-destructive/10 rounded">
-                            <ThumbsDown className="w-3 h-3 text-destructive" />
-                            <span className="text-xs text-destructive">Negative</span>
-                          </div>
-                        )}
-                        {/* Feedback kind badge */}
-                        <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                          {annotations[trace.traceId].feedbackKind}
-                        </span>
-                      </div>
-                      {/* Source and User ID row */}
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className={`px-1.5 py-0.5 rounded ${
-                          annotations[trace.traceId].source === "end-user" 
-                            ? "bg-primary/10 text-primary" 
-                            : "bg-secondary text-muted-foreground"
-                        }`}>
-                          {annotations[trace.traceId].source}
-                        </span>
-                        <span>user: {annotations[trace.traceId].userId}</span>
-                      </div>
-                      {/* Comments row (if exists) */}
-                      {annotations[trace.traceId].comments && (
-                        <div className="flex items-start gap-1 mt-0.5">
-                          <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
-                          <span className="text-xs text-foreground/80 line-clamp-2" title={annotations[trace.traceId].comments}>
-                            {annotations[trace.traceId].comments}
-                          </span>
+                    <div className="flex items-center gap-3">
+                      {/* Thumbs icon with background */}
+                      {annotations[trace.traceId].annotation === true && (
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-success/15">
+                          <ThumbsUp className="w-3.5 h-3.5 text-success" />
                         </div>
                       )}
+                      {annotations[trace.traceId].annotation === false && (
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-destructive/15">
+                          <ThumbsDown className="w-3.5 h-3.5 text-destructive" />
+                        </div>
+                      )}
+                      {/* Info */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs font-medium ${
+                            annotations[trace.traceId].source === "end-user" 
+                              ? "text-primary" 
+                              : "text-muted-foreground"
+                          }`}>
+                            {annotations[trace.traceId].source === "end-user" ? "End User" : "Builder"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            #{annotations[trace.traceId].userId}
+                          </span>
+                        </div>
+                        {annotations[trace.traceId].comments ? (
+                          <p className="text-[11px] text-muted-foreground truncate max-w-[160px]" title={annotations[trace.traceId].comments}>
+                            {annotations[trace.traceId].comments}
+                          </p>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/60 italic">No comment</span>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">-</span>
@@ -643,14 +637,14 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
         />
       )}
 
-      {/* Promote to Dataset Dialog */}
+      {/* Add to Dataset Dialog */}
       {showDatasetDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col overflow-x-hidden">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  Promote to Dataset
+                  Add to Dataset
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   Add {selectedRows.size} trace{selectedRows.size !== 1 ? "s" : ""} to an evaluation dataset
