@@ -33,6 +33,8 @@ interface TraceAnnotation {
 interface TracesTableProps {
   onAnnotationComplete: (results: AnnotationResult[], templateName: string, templateData: FullTemplate) => void
   annotations?: Record<string, TraceAnnotation>
+  hasPipelineConfigured?: boolean
+  onNavigateToPipeline?: () => void
 }
 
 // Generate mock trace data with Microsoft Foundry support questions
@@ -272,10 +274,11 @@ const existingDatasets = [
   { id: "3", name: "edge-cases-dataset", version: "Version 1", count: 42, evalSuiteId: "suite-3" },
 ]
 
-export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTableProps) {
+export function TracesTable({ onAnnotationComplete, annotations = {}, hasPipelineConfigured = false, onNavigateToPipeline }: TracesTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
   const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
+  const [pipelineBannerDismissed, setPipelineBannerDismissed] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
   const [showDatasetDialog, setShowDatasetDialog] = useState(false)
   const [datasetMode, setDatasetMode] = useState<"append" | "create">("append")
@@ -529,6 +532,61 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
               Apply filter
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Pipeline Banner (no pipeline configured) */}
+      {!hasPipelineConfigured && !pipelineBannerDismissed && (
+        <div className="mb-4 flex items-center gap-4 p-3 bg-card border-l-[3px] border-l-primary border border-border rounded-r-lg">
+          <div className="shrink-0 w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary">
+              <path d="M2 3h12v2l-4 4v4l-4 2V9L2 5V3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[13px] font-semibold text-foreground">Automate trace curation</h4>
+            <p className="text-[11px] text-muted-foreground">
+              Set up a pipeline to automatically filter and add high-value traces to your eval dataset on a schedule.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <button 
+              onClick={onNavigateToPipeline}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              Configure pipeline
+            </button>
+            <button 
+              onClick={() => setPipelineBannerDismissed(true)}
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pipeline Status Line (pipeline configured) */}
+      {hasPipelineConfigured && (
+        <div className="mb-3 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+            <span className="text-muted-foreground">
+              Trace-to-dataset pipeline active
+              <span className="mx-1.5 text-border">·</span>
+              Weekly
+              <span className="mx-1.5 text-border">·</span>
+              Last run 3 days ago
+              <span className="mx-1.5 text-border">·</span>
+              <span className="text-foreground">793 traces</span> added to <span className="text-foreground">twitter-eval-dataset v1</span>
+            </span>
+          </div>
+          <button 
+            onClick={onNavigateToPipeline}
+            className="text-sm text-primary hover:underline"
+          >
+            Configure
+          </button>
         </div>
       )}
 

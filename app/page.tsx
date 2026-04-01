@@ -251,6 +251,11 @@ export default function AgentMonitoringPage() {
           <TracesTable 
             onAnnotationComplete={handleAnnotationComplete} 
             annotations={traceAnnotations}
+            hasPipelineConfigured={true}
+            onNavigateToPipeline={() => {
+              setSidebarSection("data")
+              setActiveTab("data")
+            }}
           />
         )}
 
