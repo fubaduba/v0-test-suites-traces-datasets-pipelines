@@ -7,6 +7,7 @@ import { AgentHeader } from "@/components/agent-header"
 import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
 import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
+import { PipelineConfig } from "@/components/pipeline-config"
 
 interface ThumbQuestion {
   id: string
@@ -66,6 +67,7 @@ interface TraceAnnotation {
 
 export default function AgentMonitoringPage() {
   const [activeTab, setActiveTab] = useState("traces")
+  const [sidebarSection, setSidebarSection] = useState("agents")
   const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({
     // Prepopulated end-user annotations
     "7a6bf85a13a84c58b38d001f6e973870": {
@@ -224,7 +226,17 @@ export default function AgentMonitoringPage() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar 
+        activeSection={sidebarSection} 
+        onSectionChange={(section) => {
+          setSidebarSection(section)
+          if (section === "data") {
+            setActiveTab("data")
+          } else if (section === "agents") {
+            setActiveTab("traces")
+          }
+        }}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -258,6 +270,10 @@ export default function AgentMonitoringPage() {
 
         {activeTab === "monitor" && (
           <ContinuousEvalMonitor />
+        )}
+
+        {activeTab === "data" && (
+          <PipelineConfig onClose={() => setActiveTab("traces")} />
         )}
       </div>
     </div>

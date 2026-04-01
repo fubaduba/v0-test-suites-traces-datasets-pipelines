@@ -14,19 +14,24 @@ import {
   Settings,
 } from "lucide-react"
 
+interface SidebarProps {
+  activeSection?: string
+  onSectionChange?: (section: string) => void
+}
+
 const navItems = [
-  { icon: Bot, label: "Agents", active: true },
-  { icon: GitBranch, label: "Workflows" },
-  { icon: Box, label: "Models" },
-  { icon: Sliders, label: "Fine-tune" },
-  { icon: Wrench, label: "Tools" },
-  { icon: BookOpen, label: "Knowledge" },
-  { icon: Database, label: "Data" },
-  { icon: LineChart, label: "Evaluations" },
-  { icon: Shield, label: "Guardrails" },
+  { icon: Bot, label: "Agents", id: "agents" },
+  { icon: GitBranch, label: "Workflows", id: "workflows" },
+  { icon: Box, label: "Models", id: "models" },
+  { icon: Sliders, label: "Fine-tune", id: "finetune" },
+  { icon: Wrench, label: "Tools", id: "tools" },
+  { icon: BookOpen, label: "Knowledge", id: "knowledge" },
+  { icon: Database, label: "Data", id: "data" },
+  { icon: LineChart, label: "Evaluations", id: "evaluations" },
+  { icon: Shield, label: "Guardrails", id: "guardrails" },
 ]
 
-export function Sidebar() {
+export function Sidebar({ activeSection = "agents", onSectionChange }: SidebarProps) {
   return (
     <aside className="w-[180px] min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Logo */}
@@ -51,9 +56,10 @@ export function Sidebar() {
         {navItems.map((item) => (
           <button
             key={item.label}
+            onClick={() => onSectionChange?.(item.id)}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors",
-              item.active
+              activeSection === item.id
                 ? "text-sidebar-foreground bg-sidebar-accent"
                 : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
             )}
