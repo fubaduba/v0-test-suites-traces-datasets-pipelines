@@ -64,7 +64,7 @@ interface EvaluationViewProps {
 }
 
 const subTabs = [
-  { label: "Test Suite Review", id: "testsuite" },
+  { label: "Test Suite", id: "testsuite" },
   { label: "Automatic Evaluation", id: "automatic" },
   { label: "Human Evaluation", id: "human" },
   { label: "Red team", id: "redteam" },
