@@ -61,6 +61,7 @@ interface EvaluationViewProps {
     multipleChoiceQuestions: MultipleChoiceQuestion[]
     freeFormQuestions: FreeFormQuestion[]
   }) => void
+  onNavigateToMonitor?: () => void
 }
 
 const subTabs = [
@@ -70,7 +71,7 @@ const subTabs = [
   { label: "Red team", id: "redteam" },
 ]
 
-export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewProps) {
+export function EvaluationView({ templates, onCreateTemplate, onNavigateToMonitor }: EvaluationViewProps) {
   const [activeSubTab, setActiveSubTab] = useState("testsuite")
 
   return (
@@ -98,6 +99,7 @@ export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewPr
           onSkip={() => setActiveSubTab("automatic")}
           onEditEvaluators={() => setActiveSubTab("automatic")}
           onRunTestSuites={() => setActiveSubTab("automatic")}
+          onNavigateToMonitor={onNavigateToMonitor}
         />
       )}
 

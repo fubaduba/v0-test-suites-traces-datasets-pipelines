@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 
 interface SetupContinuousEvalProps {
   onClose: () => void
-  onComplete: () => void
-  existingEvaluators?: Evaluator[]
+  onComplete?: () => void
   onGenerateEvaluators?: () => void
+  onNavigateToMonitor?: () => void
 }
 
 interface Evaluator {
@@ -48,7 +48,7 @@ const getCategoryIcon = (category: string) => {
   }
 }
 
-export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators }: SetupContinuousEvalProps) {
+export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators, onNavigateToMonitor }: SetupContinuousEvalProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [mode, setMode] = useState<"dataset-backed" | "sample-policy">("dataset-backed")
   const [evaluators, setEvaluators] = useState(existingEvaluatorsData)
@@ -109,7 +109,10 @@ export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators 
                 </p>
                 <div className="flex items-center gap-4 mt-4">
                   <button 
-                    onClick={onComplete}
+                    onClick={() => {
+                      onComplete?.()
+                      onNavigateToMonitor?.()
+                    }}
                     className="text-sm text-primary hover:underline"
                   >
                     View Monitor tab

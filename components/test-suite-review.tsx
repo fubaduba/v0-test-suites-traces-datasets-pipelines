@@ -113,6 +113,7 @@ interface TestSuiteReviewProps {
   onSkip?: () => void
   onEditEvaluators?: () => void
   onRunTestSuites?: () => void
+  onNavigateToMonitor?: () => void
 }
 
 // Generation steps
@@ -125,7 +126,7 @@ const generationSteps = [
   { id: 6, label: "Configuring trace-to-dataset pipeline..." },
 ]
 
-export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: TestSuiteReviewProps) {
+export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onNavigateToMonitor }: TestSuiteReviewProps) {
   const [selectedSuite, setSelectedSuite] = useState<TestSuite | null>(null)
   const [showRunResults, setShowRunResults] = useState(false)
   const [offlineEvals, setOfflineEvals] = useState(offlineEvaluators)
@@ -456,9 +457,9 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
         onClose={() => setShowSetupContinuousEval(false)}
         onComplete={() => {
           setShowSetupContinuousEval(false)
-          // Optionally navigate to Monitor tab
         }}
         onGenerateEvaluators={handleGenerateTestSuite}
+        onNavigateToMonitor={onNavigateToMonitor}
       />
     )
   }

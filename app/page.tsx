@@ -246,6 +246,7 @@ export default function AgentMonitoringPage() {
           <EvaluationView
             templates={evaluationTemplates}
             onCreateTemplate={handleCreateTemplate}
+            onNavigateToMonitor={() => setActiveTab("monitor")}
           />
         )}
 
