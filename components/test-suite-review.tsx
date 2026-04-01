@@ -4,7 +4,6 @@ import { useState } from "react"
 import { CheckCircle2, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
 
 interface Evaluator {
   id: string
@@ -68,7 +67,7 @@ const testCases: TestCase[] = [
   },
 ]
 
-const getCategoryIcon = (category: "quality" | "safety" | "custom") => {
+function getCategoryIcon(category: "quality" | "safety" | "custom") {
   const baseClasses = "w-6 h-6 rounded flex items-center justify-center text-xs font-bold"
   switch (category) {
     case "quality":
@@ -124,14 +123,14 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
         {/* Header */}
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-foreground">Review generated test suite</h2>
-          <Badge variant="secondary" className="text-xs">auto-generated</Badge>
+          <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">auto-generated</span>
         </div>
 
         {/* Test Suite 1: Offline Eval */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <h3 className="text-base font-medium text-foreground">Test suite 1: offline eval</h3>
-            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">dataset-backed</Badge>
+            <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">dataset-backed</span>
           </div>
 
           {/* Evaluator Cards Grid */}
@@ -188,14 +187,14 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {testCase.toolsExpected.map((tool) => (
-                            <Badge key={tool} variant="secondary" className="text-xs font-mono">
+                            <span key={tool} className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground">
                               {tool}
-                            </Badge>
+                            </span>
                           ))}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-xs">synthetic</Badge>
+                        <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">synthetic</span>
                       </td>
                     </tr>
                   ))}
@@ -215,7 +214,7 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <h3 className="text-base font-medium text-foreground">Test suite 2: continuous eval</h3>
-            <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/30">evaluator-only</Badge>
+            <span className="inline-flex items-center rounded-md border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">evaluator-only</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -228,7 +227,7 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
                   {getCategoryIcon(evaluator.category)}
                   <div>
                     <p className="text-sm font-medium text-foreground">{evaluator.name}</p>
-                    <p className="text-xs text-muted-foreground">Online eval · sampled traffic</p>
+                    <p className="text-xs text-muted-foreground">Online eval - sampled traffic</p>
                   </div>
                 </div>
                 <Switch
@@ -258,7 +257,7 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 rounded-full bg-success mt-1.5 shrink-0" />
-              <p className="text-sm text-foreground">Schedule: weekly · new dataset version created each run</p>
+              <p className="text-sm text-foreground">Schedule: weekly - new dataset version created each run</p>
             </div>
           </div>
 
