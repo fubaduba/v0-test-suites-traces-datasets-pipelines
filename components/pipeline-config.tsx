@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 
 interface PipelineConfigProps {
   onClose?: () => void
+  isEmbedded?: boolean
 }
 
 // Sample run history data
@@ -36,7 +37,7 @@ const testSuites = [
   { id: "2", name: "safety-red-team" },
 ]
 
-export function PipelineConfig({ onClose }: PipelineConfigProps) {
+export function PipelineConfig({ onClose, isEmbedded = false }: PipelineConfigProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   
@@ -95,15 +96,19 @@ export function PipelineConfig({ onClose }: PipelineConfigProps) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <span>Data</span>
-              <ChevronRight className="w-4 h-4" />
-              <span>Pipelines</span>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-foreground">twitter-support-agent</span>
-            </div>
+            {!isEmbedded && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <span>Data</span>
+                <ChevronRight className="w-4 h-4" />
+                <span>Pipelines</span>
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-foreground">twitter-support-agent</span>
+              </div>
+            )}
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-foreground">Trace-to-dataset pipeline</h1>
+              <h1 className={`font-semibold text-foreground ${isEmbedded ? 'text-lg' : 'text-2xl'}`}>
+                {isEmbedded ? 'twitter-support-agent pipeline' : 'Trace-to-dataset pipeline'}
+              </h1>
               <div className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${isPaused ? 'bg-muted-foreground' : 'bg-success'}`} />
                 <span className={`text-sm ${isPaused ? 'text-muted-foreground' : 'text-success'}`}>
@@ -115,6 +120,7 @@ export function PipelineConfig({ onClose }: PipelineConfigProps) {
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
+              size={isEmbedded ? "sm" : "default"}
               onClick={() => {
                 setIsPaused(!isPaused)
                 handleChange()
@@ -123,11 +129,12 @@ export function PipelineConfig({ onClose }: PipelineConfigProps) {
               {isPaused ? <Play className="w-4 h-4 mr-2" /> : <Pause className="w-4 h-4 mr-2" />}
               {isPaused ? 'Resume pipeline' : 'Pause pipeline'}
             </Button>
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
+            <Button variant="outline" size={isEmbedded ? "sm" : "default"} className="border-primary text-primary hover:bg-primary/10">
               <Play className="w-4 h-4 mr-2" />
               Run now
             </Button>
             <Button 
+              size={isEmbedded ? "sm" : "default"}
               className="bg-primary hover:bg-primary/90" 
               disabled={!hasChanges}
               onClick={handleSave}

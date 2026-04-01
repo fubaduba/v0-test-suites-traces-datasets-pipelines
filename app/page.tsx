@@ -7,7 +7,7 @@ import { AgentHeader } from "@/components/agent-header"
 import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
 import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
-import { PipelineConfig } from "@/components/pipeline-config"
+import { DataView } from "@/components/data-view"
 
 interface ThumbQuestion {
   id: string
@@ -68,6 +68,7 @@ interface TraceAnnotation {
 export default function AgentMonitoringPage() {
   const [activeTab, setActiveTab] = useState("traces")
   const [sidebarSection, setSidebarSection] = useState("agents")
+  const [dataSubTab, setDataSubTab] = useState("datasets")
   const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({
     // Prepopulated end-user annotations
     "7a6bf85a13a84c58b38d001f6e973870": {
@@ -254,6 +255,7 @@ export default function AgentMonitoringPage() {
             hasPipelineConfigured={true}
             onNavigateToPipeline={() => {
               setSidebarSection("data")
+              setDataSubTab("pipelines")
               setActiveTab("data")
             }}
           />
@@ -278,7 +280,10 @@ export default function AgentMonitoringPage() {
         )}
 
         {activeTab === "data" && (
-          <PipelineConfig onClose={() => setActiveTab("traces")} />
+          <DataView 
+            defaultSubTab={dataSubTab} 
+            onClose={() => setActiveTab("traces")} 
+          />
         )}
       </div>
     </div>
