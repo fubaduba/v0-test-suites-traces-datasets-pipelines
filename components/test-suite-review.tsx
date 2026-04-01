@@ -150,6 +150,9 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
 
   // Detail View - Review generated test suite
   if (selectedSuite) {
+    const isDatasetBacked = selectedSuite.kind === "dataset-backed"
+    const isEvaluatorOnly = selectedSuite.kind === "evaluator-only"
+    
     return (
       <TooltipProvider>
         <div className="flex-1 flex flex-col overflow-auto">
@@ -163,34 +166,46 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
               Back to test suites
             </button>
 
-            {/* Purple Success Banner */}
-            <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
-              <h3 className="text-base font-semibold text-primary">Test suite generated for twitter-support-agent</h3>
-              <p className="text-sm text-primary/80 mt-1">
-                Foundry analyzed your agent&apos;s system prompt, 4 tools, and model (gpt-4o) to generate context-specific evaluators and a starter dataset. Review below and adjust before running.
-              </p>
-            </div>
+            {/* Banner - different based on kind */}
+            {isDatasetBacked ? (
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                <h3 className="text-base font-semibold text-primary">Test suite: {selectedSuite.name}</h3>
+                <p className="text-sm text-primary/80 mt-1">
+                  This dataset-backed test suite runs evaluators against {selectedSuite.datasetItems} test cases from {selectedSuite.dataset} ({selectedSuite.datasetVersion}).
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 bg-success/10 border border-success/30 rounded-lg">
+                <h3 className="text-base font-semibold text-success">Test suite: {selectedSuite.name}</h3>
+                <p className="text-sm text-success/80 mt-1">
+                  This evaluator-only test suite runs continuously on sampled production traffic ({selectedSuite.sampleRate || "10%"} of traces).
+                </p>
+              </div>
+            )}
 
             {/* Heading with badge */}
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-foreground">Review generated test suite</h2>
-              <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                auto-generated
-              </span>
-            </div>
-
-            {/* Test suite 1: offline eval */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h3 className="text-base font-medium text-foreground">Test suite 1: offline eval</h3>
+              <h2 className="text-xl font-semibold text-foreground">{selectedSuite.name}</h2>
+              {isDatasetBacked ? (
                 <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   dataset-backed
                 </span>
+              ) : (
+                <span className="inline-flex items-center rounded-md border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                  evaluator-only
+                </span>
+              )}
+            </div>
+
+            {/* Evaluators section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-base font-medium text-foreground">Evaluators ({selectedSuite.evaluatorCount})</h3>
               </div>
 
               {/* Evaluator cards grid */}
               <div className="grid grid-cols-2 gap-3">
-                {offlineEvals.map((evaluator) => {
+                {(isEvaluatorOnly ? continuousEvals : offlineEvals).map((evaluator) => {
                   const icon = getCategoryIcon(evaluator.category)
                   return (
                     <div
@@ -204,11 +219,13 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
                           </div>
                           <div>
                             <h4 className="text-sm font-medium text-foreground">{evaluator.name}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5">{evaluator.type}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {isEvaluatorOnly ? "Online eval - sampled traffic" : evaluator.type}
+                            </p>
                           </div>
                         </div>
                         <button
-                          onClick={() => toggleEvaluator(evaluator.id, true)}
+                          onClick={() => toggleEvaluator(evaluator.id, !isEvaluatorOnly)}
                           className={`relative w-9 h-5 rounded-full transition-colors ${evaluator.enabled ? 'bg-primary' : 'bg-muted'}`}
                         >
                           <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${evaluator.enabled ? 'left-[18px]' : 'left-0.5'}`} />
@@ -218,125 +235,129 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
                   )
                 })}
               </div>
+            </div>
 
-              {/* Generated dataset section */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium text-foreground">Generated dataset (25 test cases)</h4>
-                  <button className="text-xs text-primary hover:underline flex items-center gap-1">
-                    <Pencil className="w-3 h-3" />
-                    edit
-                  </button>
-                </div>
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-secondary/50">
-                      <tr className="border-b border-border">
-                        <th className="text-left px-4 py-2 font-medium text-muted-foreground">Query</th>
-                        <th className="text-left px-4 py-2 font-medium text-muted-foreground">Expected behavior</th>
-                        <th className="text-left px-4 py-2 font-medium text-muted-foreground">Tools expected</th>
-                        <th className="text-left px-4 py-2 font-medium text-muted-foreground">Source</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {generatedDataset.map((row) => (
-                        <tr key={row.id} className="border-b border-border/50">
-                          <td className="px-4 py-3 text-foreground">{row.query}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{row.expected}</td>
-                          <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{row.tools}</td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-500">
-                              {row.source}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="px-4 py-2 bg-secondary/30 text-sm text-muted-foreground">
-                    + 21 more test cases...
+            {/* Dataset section - only for dataset-backed */}
+            {isDatasetBacked && (
+              <>
+                <div className="border-t border-border" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-base font-medium text-foreground">Dataset: {selectedSuite.dataset}</h3>
+                    <span className="text-sm text-muted-foreground">{selectedSuite.datasetVersion} - {selectedSuite.datasetItems} items</span>
+                  </div>
+
+                  {/* Dataset table */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium text-foreground">Test cases</h4>
+                      <button className="text-xs text-primary hover:underline flex items-center gap-1">
+                        <Pencil className="w-3 h-3" />
+                        edit
+                      </button>
+                    </div>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-secondary/50">
+                          <tr className="border-b border-border">
+                            <th className="text-left px-4 py-2 font-medium text-muted-foreground">Query</th>
+                            <th className="text-left px-4 py-2 font-medium text-muted-foreground">Expected behavior</th>
+                            <th className="text-left px-4 py-2 font-medium text-muted-foreground">Tools expected</th>
+                            <th className="text-left px-4 py-2 font-medium text-muted-foreground">Source</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {generatedDataset.map((row) => (
+                            <tr key={row.id} className="border-b border-border/50">
+                              <td className="px-4 py-3 text-foreground">{row.query}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{row.expected}</td>
+                              <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{row.tools}</td>
+                              <td className="px-4 py-3">
+                                <span className="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-500">
+                                  {row.source}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="px-4 py-2 bg-secondary/30 text-sm text-muted-foreground">
+                        + {(selectedSuite.datasetItems || 25) - 4} more test cases...
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Divider */}
-            <div className="border-t border-border" />
-
-            {/* Test suite 2: continuous eval */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h3 className="text-base font-medium text-foreground">Test suite 2: continuous eval</h3>
-                <span className="inline-flex items-center rounded-md border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                  evaluator-only
-                </span>
-              </div>
-
-              {/* Continuous evaluator cards */}
-              <div className="grid grid-cols-2 gap-3">
-                {continuousEvals.map((evaluator) => {
-                  const icon = getCategoryIcon(evaluator.category)
-                  return (
-                    <div
-                      key={evaluator.id}
-                      className={`p-4 rounded-lg border transition-colors ${evaluator.enabled ? 'border-border bg-card' : 'border-border/50 bg-secondary/30 opacity-60'}`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-semibold ${icon.color}`}>
-                            {icon.letter}
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-foreground">{evaluator.name}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5">{evaluator.type}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => toggleEvaluator(evaluator.id, false)}
-                          className={`relative w-9 h-5 rounded-full transition-colors ${evaluator.enabled ? 'bg-primary' : 'bg-muted'}`}
-                        >
-                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${evaluator.enabled ? 'left-[18px]' : 'left-0.5'}`} />
-                        </button>
+            {/* Sampling config - only for evaluator-only */}
+            {isEvaluatorOnly && (
+              <>
+                <div className="border-t border-border" />
+                <div className="space-y-4">
+                  <h3 className="text-base font-medium text-foreground">Sampling configuration</h3>
+                  <div className="p-4 bg-secondary/30 rounded-lg border border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-foreground">Sample rate</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Percentage of production traces to evaluate</p>
                       </div>
+                      <span className="text-lg font-semibold text-foreground">{selectedSuite.sampleRate || "10%"}</span>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Evaluators run asynchronously on sampled traces</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Results aggregated in real-time dashboard</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Alerts configured for score drops below threshold</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Divider */}
-            <div className="border-t border-border" />
-
-            {/* Auto-configured section */}
-            <div className="space-y-3">
-              <h3 className="text-base font-medium text-foreground">Auto-configured</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-                  <span className="text-sm text-foreground">Trace-to-dataset pipeline will keep the golden dataset current with production traces</span>
+            {/* Pipeline config - only for dataset-backed */}
+            {isDatasetBacked && (
+              <>
+                <div className="border-t border-border" />
+                <div className="space-y-3">
+                  <h3 className="text-base font-medium text-foreground">Pipeline configuration</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Trace-to-dataset pipeline keeps the golden dataset current with production traces</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Filtering: rule-based quality + semantic dedup + LLM quality gate</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                      <span className="text-sm text-foreground">Schedule: weekly - new dataset version created each run</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">These settings can be customized from the Data tab.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-                  <span className="text-sm text-foreground">Filtering: rule-based quality + semantic dedup + LLM quality gate</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-                  <span className="text-sm text-foreground">Schedule: weekly - new dataset version created each run</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">These settings can be customized later from the Data tab.</p>
-            </div>
+              </>
+            )}
 
             {/* Action buttons */}
             <div className="flex items-center justify-end gap-3 pt-4">
               <Button variant="ghost" onClick={() => setSelectedSuite(null)}>
-                Skip for now
+                Back
               </Button>
               <Button variant="outline" className="border-primary text-primary hover:bg-primary/10" onClick={onEditEvaluators}>
                 Edit evaluators
               </Button>
               <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowRunResults(true)}>
-                Run test suites
+                {isEvaluatorOnly ? "View live results" : "Run test suite"}
               </Button>
             </div>
           </div>
