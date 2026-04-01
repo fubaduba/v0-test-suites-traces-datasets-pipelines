@@ -6,6 +6,7 @@ import { Header } from "@/components/header"
 import { AgentHeader } from "@/components/agent-header"
 import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
+import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
 
 interface ThumbQuestion {
   id: string
@@ -255,9 +256,7 @@ export default function AgentMonitoringPage() {
         )}
 
         {activeTab === "monitor" && (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Monitor content coming soon
-          </div>
+          <ContinuousEvalMonitor />
         )}
       </div>
     </div>
