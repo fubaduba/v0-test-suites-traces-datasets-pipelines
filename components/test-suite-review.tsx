@@ -449,6 +449,20 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
     )
   }
 
+  // Show setup continuous eval flow
+  if (showSetupContinuousEval) {
+    return (
+      <SetupContinuousEval
+        onClose={() => setShowSetupContinuousEval(false)}
+        onComplete={() => {
+          setShowSetupContinuousEval(false)
+          // Optionally navigate to Monitor tab
+        }}
+        onGenerateEvaluators={handleGenerateTestSuite}
+      />
+    )
+  }
+
   // Show eval results when clicking a run
   if (showRunResults && selectedSuite) {
     return (
@@ -689,9 +703,14 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
               <h2 className="text-xl font-semibold text-foreground">Test suites</h2>
               <span className="text-muted-foreground">({testSuites.length})</span>
             </div>
-            <Button className="bg-primary hover:bg-primary/90" onClick={handleGenerateTestSuite}>
-              Generate test suite
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => setShowSetupContinuousEval(true)}>
+                Setup continuous eval
+              </Button>
+              <Button className="bg-primary hover:bg-primary/90" onClick={handleGenerateTestSuite}>
+                Generate test suite
+              </Button>
+            </div>
           </div>
 
           {/* Test Suites Table */}

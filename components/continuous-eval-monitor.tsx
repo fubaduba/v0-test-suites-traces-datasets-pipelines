@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Pause, Settings, ArrowDown, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EvalResultsView } from "./eval-results-view"
+import { SetupContinuousEval } from "./setup-continuous-eval"
 
 interface EvalRun {
   id: string
@@ -35,9 +36,28 @@ const scoreTrendData = [
   { day: "Mar 31", score: 71 },
 ]
 
-export function ContinuousEvalMonitor() {
+interface ContinuousEvalMonitorProps {
+  isConfigured?: boolean
+}
+
+export function ContinuousEvalMonitor({ isConfigured = true }: ContinuousEvalMonitorProps) {
   const [selectedRun, setSelectedRun] = useState<EvalRun | null>(null)
   const [isPaused, setIsPaused] = useState(false)
+  const [showSetup, setShowSetup] = useState(!isConfigured)
+  const [configured, setConfigured] = useState(isConfigured)
+
+  // Show setup flow when not configured
+  if (showSetup || !configured) {
+    return (
+      <SetupContinuousEval
+        onClose={() => setShowSetup(false)}
+        onComplete={() => {
+          setShowSetup(false)
+          setConfigured(true)
+        }}
+      />
+    )
+  }
 
   // Show eval results when a run is selected
   if (selectedRun) {
@@ -102,7 +122,7 @@ export function ContinuousEvalMonitor() {
               <Pause className="w-4 h-4 mr-1.5" />
               {isPaused ? 'Resume' : 'Pause'}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setShowSetup(true)}>
               <Settings className="w-4 h-4 mr-1.5" />
               Configure
             </Button>
