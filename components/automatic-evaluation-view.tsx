@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
 import { AnnotationWizard } from "./annotation-wizard"
+import { EvalResultsView } from "./eval-results-view"
 
 interface AutomaticEvaluation {
   id: string
@@ -314,6 +315,7 @@ export function AutomaticEvaluationView() {
   const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
   const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
+  const [selectedRun, setSelectedRun] = useState<EvaluationRun | null>(null)
 
   const filteredEvaluations = mockEvaluations.filter((evaluation) =>
     evaluation.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -378,6 +380,17 @@ export function AutomaticEvaluationView() {
     setSelectedTemplate(null)
     setSelectedRuns(new Set())
     alert(`Annotation completed for ${results.length} evaluation run(s)!`)
+  }
+
+  // Eval Results View (when a run is clicked)
+  if (selectedRun && selectedEvaluation) {
+    return (
+      <EvalResultsView 
+        onClose={() => setSelectedRun(null)}
+        runName={`${selectedRun.name} ${selectedRun.subName}`}
+        evaluationName={selectedEvaluation.name}
+      />
+    )
   }
 
   // Detail View
@@ -543,7 +556,15 @@ export function AutomaticEvaluationView() {
                   </td>
                   <td className="py-3">
                     <div>
-                      <span className="text-primary hover:underline cursor-pointer">{run.name}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedRun(run)
+                        }}
+                        className="text-primary hover:underline cursor-pointer text-left"
+                      >
+                        {run.name}
+                      </button>
                       <div className="text-xs text-muted-foreground">{run.subName}</div>
                     </div>
                   </td>

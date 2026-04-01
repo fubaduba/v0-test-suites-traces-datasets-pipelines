@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 interface EvalResultsViewProps {
   onClose: () => void
   onPromoteToDataset?: (selectedIds: string[]) => void
+  runName?: string
+  evaluationName?: string
 }
 
 // Mock data for the eval run results
@@ -58,7 +60,7 @@ const existingDatasets = [
   { id: "3", name: "edge-cases-dataset", version: "v1", count: 42 },
 ]
 
-export function EvalResultsView({ onClose, onPromoteToDataset }: EvalResultsViewProps) {
+export function EvalResultsView({ onClose, onPromoteToDataset, runName, evaluationName }: EvalResultsViewProps) {
   const [activeFilter, setActiveFilter] = useState<"all" | "failures" | "regressions">("failures")
   const [selectedRows, setSelectedRows] = useState<Set<string>>(
     new Set(evalRunData.failingCases.map((c) => c.id))
@@ -126,7 +128,7 @@ export function EvalResultsView({ onClose, onPromoteToDataset }: EvalResultsView
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground">
-            Eval run #{evalRunData.runNumber} — {evalRunData.agentName} v{evalRunData.agentVersion}
+            {runName || `Eval run #${evalRunData.runNumber} — ${evalRunData.agentName} v${evalRunData.agentVersion}`}
           </h2>
           <span className="px-2.5 py-1 text-xs font-medium bg-destructive/10 text-destructive rounded-full">
             {evalRunData.failures} failures

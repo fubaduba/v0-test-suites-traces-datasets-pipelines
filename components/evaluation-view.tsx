@@ -4,7 +4,6 @@ import { useState } from "react"
 import { HumanEvaluationView } from "./human-evaluation-view"
 import { AutomaticEvaluationView } from "./automatic-evaluation-view"
 import { TestSuiteReview } from "./test-suite-review"
-import { EvalResultsView } from "./eval-results-view"
 
 interface EvaluationResult {
   id: string
@@ -66,7 +65,6 @@ interface EvaluationViewProps {
 
 const subTabs = [
   { label: "Test Suite", id: "testsuite" },
-  { label: "Eval Results", id: "evalresults" },
   { label: "Automatic Evaluation", id: "automatic" },
   { label: "Human Evaluation", id: "human" },
   { label: "Red team", id: "redteam" },
@@ -99,13 +97,7 @@ export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewPr
         <TestSuiteReview 
           onSkip={() => setActiveSubTab("automatic")}
           onEditEvaluators={() => setActiveSubTab("automatic")}
-          onRunTestSuites={() => setActiveSubTab("evalresults")}
-        />
-      )}
-
-      {activeSubTab === "evalresults" && (
-        <EvalResultsView 
-          onClose={() => setActiveSubTab("testsuite")}
+          onRunTestSuites={() => setActiveSubTab("automatic")}
         />
       )}
 
