@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { HumanEvaluationView } from "./human-evaluation-view"
 import { AutomaticEvaluationView } from "./automatic-evaluation-view"
+import { TestSuiteReview } from "./test-suite-review"
 
 interface EvaluationResult {
   id: string
@@ -63,13 +64,14 @@ interface EvaluationViewProps {
 }
 
 const subTabs = [
+  { label: "Test Suite Review", id: "testsuite" },
   { label: "Automatic Evaluation", id: "automatic" },
   { label: "Human Evaluation", id: "human" },
   { label: "Red team", id: "redteam" },
 ]
 
 export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState("human")
+  const [activeSubTab, setActiveSubTab] = useState("testsuite")
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -91,6 +93,14 @@ export function EvaluationView({ templates, onCreateTemplate }: EvaluationViewPr
       </div>
 
       {/* Content */}
+      {activeSubTab === "testsuite" && (
+        <TestSuiteReview 
+          onSkip={() => setActiveSubTab("automatic")}
+          onEditEvaluators={() => setActiveSubTab("automatic")}
+          onRunTestSuites={() => setActiveSubTab("automatic")}
+        />
+      )}
+
       {activeSubTab === "human" && (
         <HumanEvaluationView 
           templates={templates.map(t => ({
