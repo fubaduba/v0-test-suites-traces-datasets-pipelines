@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare, Database, X, Plus, Sparkles } from "lucide-react"
+import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare, Database, X, Plus, Sparkles, Filter, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
@@ -282,6 +282,10 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
   const [selectedDataset, setSelectedDataset] = useState<string>("")
   const [newDatasetName, setNewDatasetName] = useState("")
   const [useAnnotationsForGroundtruth, setUseAnnotationsForGroundtruth] = useState(true)
+  const [showAutoFilterPanel, setShowAutoFilterPanel] = useState(false)
+  const [ruleBasedFilter, setRuleBasedFilter] = useState(true)
+  const [semanticDedup, setSemanticDedup] = useState(true)
+  const [llmQualityGate, setLlmQualityGate] = useState(true)
 
   const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows)
@@ -351,6 +355,16 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
 
         {/* Add to Dataset, Annotate button and Date range */}
         <div className="flex items-center gap-2">
+          {/* Auto-filter Button */}
+          <Button
+            variant="outline"
+            className={`text-sm ${showAutoFilterPanel ? 'border-primary text-primary' : ''}`}
+            onClick={() => setShowAutoFilterPanel(!showAutoFilterPanel)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Auto-filter
+          </Button>
+
           {/* Add to Dataset Button */}
           <Button
             variant="outline"
@@ -402,6 +416,121 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           ))}
         </div>
       </div>
+
+      {/* Auto-filter Panel */}
+      {showAutoFilterPanel && (
+        <div className="mb-4 p-5 bg-card border border-border rounded-lg">
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-foreground">Auto-filter traces</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Apply intelligent filtering to select high-value traces for your eval dataset
+            </p>
+          </div>
+
+          {/* Filter Stage Cards */}
+          <div className="grid grid-cols-3 gap-4 mb-5">
+            {/* Rule-based quality */}
+            <div className={`p-4 rounded-lg border transition-colors ${ruleBasedFilter ? 'border-primary/50 bg-primary/5' : 'border-border bg-secondary/30'}`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-medium text-foreground">Rule-based quality</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Filter malformed or incomplete traces</p>
+                </div>
+                <button
+                  onClick={() => setRuleBasedFilter(!ruleBasedFilter)}
+                  className={`relative w-9 h-5 rounded-full transition-colors ${ruleBasedFilter ? 'bg-primary' : 'bg-muted'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${ruleBasedFilter ? 'left-[18px]' : 'left-0.5'}`} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">~80% retention</span>
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">seconds</span>
+                <span className="px-2 py-0.5 text-xs bg-success/10 text-success rounded">no cost</span>
+              </div>
+            </div>
+
+            {/* Semantic dedup */}
+            <div className={`p-4 rounded-lg border transition-colors ${semanticDedup ? 'border-primary/50 bg-primary/5' : 'border-border bg-secondary/30'}`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-medium text-foreground">Semantic dedup</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Remove semantically similar traces</p>
+                </div>
+                <button
+                  onClick={() => setSemanticDedup(!semanticDedup)}
+                  className={`relative w-9 h-5 rounded-full transition-colors ${semanticDedup ? 'bg-primary' : 'bg-muted'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${semanticDedup ? 'left-[18px]' : 'left-0.5'}`} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">10-50% retention</span>
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">minutes</span>
+                <span className="px-2 py-0.5 text-xs bg-amber-500/10 text-amber-500 rounded">~$10/1M traces</span>
+              </div>
+            </div>
+
+            {/* LLM quality gate */}
+            <div className={`p-4 rounded-lg border transition-colors ${llmQualityGate ? 'border-primary/50 bg-primary/5' : 'border-border bg-secondary/30'}`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-medium text-foreground">LLM quality gate</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">AI-powered quality assessment</p>
+                </div>
+                <button
+                  onClick={() => setLlmQualityGate(!llmQualityGate)}
+                  className={`relative w-9 h-5 rounded-full transition-colors ${llmQualityGate ? 'bg-primary' : 'bg-muted'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${llmQualityGate ? 'left-[18px]' : 'left-0.5'}`} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">30-50% retention</span>
+                <span className="px-2 py-0.5 text-xs bg-secondary text-muted-foreground rounded">minutes</span>
+                <span className="px-2 py-0.5 text-xs bg-amber-500/10 text-amber-500 rounded">variable cost</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Funnel Preview */}
+          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg mb-4">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-foreground font-medium">12,400</span>
+              <span className="text-muted-foreground">raw traces</span>
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              {ruleBasedFilter && (
+                <>
+                  <span className="text-foreground font-medium">9,920</span>
+                  <span className="text-muted-foreground">quality filter</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                </>
+              )}
+              {semanticDedup && (
+                <>
+                  <span className="text-foreground font-medium">1,984</span>
+                  <span className="text-muted-foreground">dedup</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                </>
+              )}
+              <span className="text-success font-semibold">{llmQualityGate ? '793' : semanticDedup ? '1,984' : ruleBasedFilter ? '9,920' : '12,400'}</span>
+              <span className="text-success">final dataset</span>
+            </div>
+            <Button 
+              onClick={() => {
+                // Select filtered traces (simulate by selecting subset)
+                const filteredCount = llmQualityGate ? 8 : semanticDedup ? 9 : ruleBasedFilter ? 10 : 10
+                const newSelected = new Set(traces.slice(0, filteredCount).map(t => t.id))
+                setSelectedRows(newSelected)
+                setShowAutoFilterPanel(false)
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Apply filter
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
