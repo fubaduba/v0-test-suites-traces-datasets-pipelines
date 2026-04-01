@@ -59,6 +59,7 @@ export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators,
   const [semanticDedup, setSemanticDedup] = useState(true)
   const [llmQualityGate, setLlmQualityGate] = useState(true)
   const [targetDataset, setTargetDataset] = useState("twitter-eval-dataset")
+  const [newDatasetName, setNewDatasetName] = useState("")
   const [datasetRefresh, setDatasetRefresh] = useState("weekly")
   const [alertThreshold, setAlertThreshold] = useState(70)
   const [alertEmail, setAlertEmail] = useState(true)
@@ -253,6 +254,84 @@ export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators,
         {/* Step 2: Configuration */}
         {currentStep === 2 && (
           <div className="space-y-8">
+            {/* Dataset selection - only for dataset-backed mode */}
+            {mode === "dataset-backed" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-medium text-foreground">Select dataset</h3>
+                <p className="text-sm text-muted-foreground">Choose an existing dataset or create a new one for your evaluations.</p>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  {existingDatasets.map((dataset) => (
+                    <button
+                      key={dataset.id}
+                      onClick={() => setTargetDataset(dataset.name)}
+                      className={`p-4 rounded-lg border text-left transition-colors ${
+                        targetDataset === dataset.name 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border bg-card hover:border-muted-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Database className="w-5 h-5 text-muted-foreground" />
+                          <div>
+                            <h4 className="text-sm font-medium text-foreground">{dataset.name}</h4>
+                            <p className="text-xs text-muted-foreground">{dataset.items} items - {dataset.version}</p>
+                          </div>
+                        </div>
+                        {targetDataset === dataset.name && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                  
+                  {/* Create new dataset option */}
+                  <button
+                    onClick={() => setTargetDataset("new")}
+                    className={`p-4 rounded-lg border text-left transition-colors ${
+                      targetDataset === "new" 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border bg-card hover:border-muted-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded border border-dashed border-muted-foreground flex items-center justify-center">
+                          <span className="text-muted-foreground text-xs">+</span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">Create new dataset</h4>
+                          <p className="text-xs text-muted-foreground">Start with an empty dataset</p>
+                        </div>
+                      </div>
+                      {targetDataset === "new" && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                </div>
+
+                {/* New dataset name input */}
+                {targetDataset === "new" && (
+                  <div className="pt-2">
+                    <label className="text-sm text-foreground mb-2 block">Dataset name</label>
+                    <input
+                      type="text"
+                      placeholder="my-eval-dataset"
+                      value={newDatasetName}
+                      onChange={(e) => setNewDatasetName(e.target.value)}
+                      className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Evaluators section */}
             <div className="space-y-4">
               <h3 className="text-base font-medium text-foreground">Evaluators</h3>
@@ -571,7 +650,9 @@ export function SetupContinuousEval({ onClose, onComplete, onGenerateEvaluators,
                   <div className="flex justify-between py-2 border-b border-border/50">
                     <span className="text-sm text-muted-foreground">Target dataset</span>
                     <span className="text-sm font-medium text-foreground">
-                      {targetDataset === "new" ? "Create new dataset" : `${targetDataset} v1`}
+                      {targetDataset === "new" 
+                        ? `${newDatasetName || "new-dataset"} (new)` 
+                        : `${targetDataset}`}
                     </span>
                   </div>
                   
