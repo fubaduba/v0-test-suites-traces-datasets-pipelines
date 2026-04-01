@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { MoreHorizontal, Play, ChevronDown, Settings, ArrowDown, ArrowUp, ArrowLeft, Pencil, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EvalResultsView } from "./eval-results-view"
+import { SetupContinuousEval } from "./setup-continuous-eval"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,6 +134,7 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites }: T
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [showGeneratedSuite, setShowGeneratedSuite] = useState(false)
+  const [showSetupContinuousEval, setShowSetupContinuousEval] = useState(false)
 
   // Handle generation progress
   useEffect(() => {
