@@ -4,9 +4,11 @@ import { useState } from "react"
 import { Search, Play, Pause, MoreHorizontal, Plus, Bot, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PipelineConfig } from "./pipeline-config"
+import { DatasetDetailView } from "./dataset-detail-view"
 
 // Sample datasets matching the screenshot
 const datasets = [
+  { id: "0", name: "twitter-eval-dataset", description: "Eval dataset for twitter-support-agent", tags: "agent:twitter-support-agent v3:prod", type: "uri_file" },
   { id: "1", name: "zava-outdoors-synth-quality-v8", description: "", tags: "eval_id:eval_3b88e5dfa5f04e2fae894f016a01acc9, eval_run_id:evalrun_e52947086c0e46519159ddfc82b15 url_file type:SyntheticData", type: "uri_file" },
   { id: "2", name: "zava-outdoors-synth-v8", description: "", tags: "eval_id:eval_b930f20c25734120ae77d59bf76a9571, eval_run_id:evalrun_a3e61948ef7043589f4dede82211f2 url_file type:SyntheticData", type: "uri_file" },
   { id: "3", name: "zava-outdoors-dataset", description: "", tags: "", type: "uri_file" },
@@ -92,6 +94,7 @@ export function DataView({ defaultSubTab = "datasets", onClose }: DataViewProps)
   const [activeSubTab, setActiveSubTab] = useState(defaultSubTab)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null)
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null)
 
   const subTabs = [
     { label: "Datasets", id: "datasets" },
@@ -125,6 +128,20 @@ export function DataView({ defaultSubTab = "datasets", onClose }: DataViewProps)
       case "paused": return "Paused"
       case "error": return "Error"
     }
+  }
+
+  // Show dataset detail view when a dataset is selected
+  if (selectedDataset) {
+    return (
+      <DatasetDetailView
+        datasetName={selectedDataset}
+        onBack={() => setSelectedDataset(null)}
+        onNavigateToPipeline={() => {
+          setSelectedDataset(null)
+          setActiveSubTab("pipelines")
+        }}
+      />
+    )
   }
 
   // Show pipeline config when a pipeline is selected
@@ -219,7 +236,12 @@ export function DataView({ defaultSubTab = "datasets", onClose }: DataViewProps)
                 {filteredDatasets.map((dataset) => (
                   <tr key={dataset.id} className="border-b border-border/50 hover:bg-secondary/30">
                     <td className="px-4 py-3">
-                      <span className="text-primary hover:underline cursor-pointer">{dataset.name}</span>
+                      <button
+                        onClick={() => setSelectedDataset(dataset.name)}
+                        className="text-primary hover:underline cursor-pointer text-left"
+                      >
+                        {dataset.name}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{dataset.description}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">{dataset.tags}</td>
