@@ -33,7 +33,7 @@ interface EvaluationsPageProps {
 type TabId = "agent-health" | "evaluator-catalog" | "red-team" | "all-runs"
 
 const tabs: { id: TabId; label: string; badge?: string }[] = [
-  { id: "agent-health", label: "Evaluations" },
+  { id: "agent-health", label: "Agent health" },
   { id: "evaluator-catalog", label: "Evaluator catalog" },
   { id: "red-team", label: "Red team", badge: "Preview" },
   { id: "all-runs", label: "All runs" },
