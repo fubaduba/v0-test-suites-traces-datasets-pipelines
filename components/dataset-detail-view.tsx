@@ -346,6 +346,14 @@ export function DatasetDetailView({
 
   const currentVersion = sampleVersions.find((v) => v.version === selectedVersion)
 
+  const filteredRows = sampleRows.filter((row) => {
+    const matchesSearch =
+      row.query.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.expectedBehavior.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSource = sourceFilter === "all" || row.source === sourceFilter
+    return matchesSearch && matchesSource
+  })
+
   // Annotation mode helpers
   const unannotatedRows = filteredRows.filter(row => !row.annotation && !annotations[row.id]?.verdict)
   const rowsNeedingReview = filteredRows.filter(row => row.annotation === "review" || annotations[row.id]?.verdict === "review")
@@ -433,14 +441,6 @@ export function DatasetDetailView({
     "Off-topic",
     "Other"
   ]
-
-  const filteredRows = sampleRows.filter((row) => {
-    const matchesSearch =
-      row.query.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      row.expectedBehavior.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesSource = sourceFilter === "all" || row.source === sourceFilter
-    return matchesSearch && matchesSource
-  })
 
   const getSourceBadgeStyles = (source: DatasetRow["source"]) => {
     switch (source) {
