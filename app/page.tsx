@@ -8,6 +8,7 @@ import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
 import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
 import { DataView } from "@/components/data-view"
+import { EvaluationsPage } from "@/components/evaluations-page"
 
 interface ThumbQuestion {
   id: string
@@ -235,6 +236,8 @@ export default function AgentMonitoringPage() {
             setActiveTab("data")
           } else if (section === "agents") {
             setActiveTab("traces")
+          } else if (section === "evaluations") {
+            setActiveTab("evaluations")
           }
         }}
       />
@@ -244,8 +247,10 @@ export default function AgentMonitoringPage() {
         {/* Top Header */}
         <Header />
 
-        {/* Agent Header with tabs */}
-        <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Agent Header with tabs - hide on evaluations page */}
+        {activeTab !== "evaluations" && (
+          <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        )}
 
         {/* Content based on active tab */}
         {activeTab === "traces" && (
@@ -283,6 +288,16 @@ export default function AgentMonitoringPage() {
           <DataView 
             defaultSubTab={dataSubTab} 
             onClose={() => setActiveTab("traces")} 
+          />
+        )}
+
+        {activeTab === "evaluations" && (
+          <EvaluationsPage 
+            onNavigateToAgent={(agentName) => {
+              // Navigate to agent's evaluation tab
+              setSidebarSection("agents")
+              setActiveTab("evaluation")
+            }}
           />
         )}
       </div>
