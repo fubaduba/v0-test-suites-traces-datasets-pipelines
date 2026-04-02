@@ -374,6 +374,8 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState<string>("all")
   const [redTeamSearch, setRedTeamSearch] = useState("")
+  const [agentHealthSearch, setAgentHealthSearch] = useState("")
+  const [evaluatorCatalogSearch, setEvaluatorCatalogSearch] = useState("")
   const [showEvalWizard, setShowEvalWizard] = useState(false)
   const [wizardPreselectedAgent, setWizardPreselectedAgent] = useState<string | undefined>(undefined)
 
@@ -395,6 +397,18 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
   const filteredRedTeamRuns = redTeamData.filter(run => 
     run.name.toLowerCase().includes(redTeamSearch.toLowerCase()) ||
     run.createdBy.toLowerCase().includes(redTeamSearch.toLowerCase())
+  )
+
+  // Filter agent health data
+  const filteredAgentHealthData = agentHealthData.filter(agent =>
+    agent.name.toLowerCase().includes(agentHealthSearch.toLowerCase())
+  )
+
+  // Filter evaluator catalog data
+  const filteredEvaluatorCatalogData = evaluatorCatalogData.filter(evaluator =>
+    evaluator.name.toLowerCase().includes(evaluatorCatalogSearch.toLowerCase()) ||
+    evaluator.description.toLowerCase().includes(evaluatorCatalogSearch.toLowerCase()) ||
+    evaluator.category.toLowerCase().includes(evaluatorCatalogSearch.toLowerCase())
   )
 
   return (
@@ -448,6 +462,20 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
           {/* Agent Health Tab */}
           {activeTab === "agent-health" && (
             <div className="px-6 py-4">
+              {/* Search */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search agents..."
+                    value={agentHealthSearch}
+                    onChange={(e) => setAgentHealthSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -462,7 +490,7 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {agentHealthData.map((agent) => {
+                  {filteredAgentHealthData.map((agent) => {
                     const isAlert = agent.evalScore !== null && agent.evalScore < 70
                     const isNotConfigured = agent.continuousEval.status === "Not configured"
                     
@@ -568,6 +596,20 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
           {/* Evaluator Catalog Tab */}
           {activeTab === "evaluator-catalog" && (
             <div className="px-6 py-4">
+              {/* Search */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search evaluators..."
+                    value={evaluatorCatalogSearch}
+                    onChange={(e) => setEvaluatorCatalogSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -580,7 +622,7 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {evaluatorCatalogData.map((evaluator) => (
+                  {filteredEvaluatorCatalogData.map((evaluator) => (
                     <TableRow key={evaluator.id}>
                       <TableCell>
                         <button className="text-primary hover:underline font-medium">
