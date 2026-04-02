@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Search, Plus, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, CheckCircle2 } from "lucide-react"
+import { CreateEvaluationWizard } from "./create-evaluation-wizard"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -373,6 +374,8 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState<string>("all")
   const [redTeamSearch, setRedTeamSearch] = useState("")
+  const [showEvalWizard, setShowEvalWizard] = useState(false)
+  const [wizardPreselectedAgent, setWizardPreselectedAgent] = useState<string | undefined>(undefined)
 
   // Calculate summary stats for agent health
   const totalAgents = agentHealthData.length
@@ -530,6 +533,10 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
                             <Button
                               size="sm"
                               className="bg-primary hover:bg-primary/90"
+                              onClick={() => {
+                                setWizardPreselectedAgent(agent.name)
+                                setShowEvalWizard(true)
+                              }}
                             >
                               Setup eval
                             </Button>
@@ -833,6 +840,17 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
             </div>
           )}
         </div>
+
+        {/* Evaluation Wizard */}
+        {showEvalWizard && (
+          <CreateEvaluationWizard
+            onClose={() => {
+              setShowEvalWizard(false)
+              setWizardPreselectedAgent(undefined)
+            }}
+            preselectedAgentName={wizardPreselectedAgent}
+          />
+        )}
       </div>
     </TooltipProvider>
   )
