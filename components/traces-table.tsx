@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare, Database, X, Plus, Sparkles, Filter, ArrowRight } from "lucide-react"
+import { Search, ChevronDown, ChevronUp, Calendar, HelpCircle, CheckCircle, Tag, ThumbsUp, ThumbsDown, MessageSquare, Database, X, Plus, Sparkles, Filter, ArrowRight, Play, Pause, Settings, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
@@ -289,6 +289,19 @@ export function TracesTable({ onAnnotationComplete, annotations = {}, hasPipelin
   const [ruleBasedFilter, setRuleBasedFilter] = useState(true)
   const [semanticDedup, setSemanticDedup] = useState(true)
   const [llmQualityGate, setLlmQualityGate] = useState(true)
+  
+  // Pipeline panel state
+  const [pipelinePanelExpanded, setPipelinePanelExpanded] = useState(false)
+  const [pipelineIsPaused, setPipelineIsPaused] = useState(false)
+  const [pipelineHasChanges, setPipelineHasChanges] = useState(false)
+  const [pipelineRuleFilter, setPipelineRuleFilter] = useState(true)
+  const [pipelineSemanticDedup, setPipelineSemanticDedup] = useState(true)
+  const [pipelineLlmGate, setPipelineLlmGate] = useState(true)
+  const [pipelineTargetDataset, setPipelineTargetDataset] = useState("twitter-eval-dataset")
+  const [pipelineVersionPolicy, setPipelineVersionPolicy] = useState("append")
+  const [pipelineSchedule, setPipelineSchedule] = useState("weekly")
+  const [pipelineAutoTriggerEval, setPipelineAutoTriggerEval] = useState(true)
+  const [expandedFilterStage, setExpandedFilterStage] = useState<string | null>(null)
 
   const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows)
@@ -358,6 +371,16 @@ export function TracesTable({ onAnnotationComplete, annotations = {}, hasPipelin
 
         {/* Add to Dataset, Annotate button and Date range */}
         <div className="flex items-center gap-2">
+          {/* Pipeline Button */}
+          <Button
+            variant="outline"
+            className={`text-sm ${pipelinePanelExpanded ? 'border-primary text-primary' : ''}`}
+            onClick={() => setPipelinePanelExpanded(!pipelinePanelExpanded)}
+          >
+            <GitBranch className="w-4 h-4 mr-2" />
+            Pipeline
+          </Button>
+
           {/* Auto-filter Button */}
           <Button
             variant="outline"
@@ -535,58 +558,323 @@ export function TracesTable({ onAnnotationComplete, annotations = {}, hasPipelin
         </div>
       )}
 
-      {/* Pipeline Banner (no pipeline configured) */}
-      {!hasPipelineConfigured && !pipelineBannerDismissed && (
-        <div className="mb-4 flex items-center gap-4 p-3 bg-card border-l-[3px] border-l-primary border border-border rounded-r-lg">
-          <div className="shrink-0 w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary">
-              <path d="M2 3h12v2l-4 4v4l-4 2V9L2 5V3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-semibold text-foreground">Automate trace curation</h4>
-            <p className="text-[11px] text-muted-foreground">
-              Set up a pipeline to automatically filter and add high-value traces to your eval dataset on a schedule.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <button 
-              onClick={onNavigateToPipeline}
-              className="text-sm text-primary hover:underline font-medium"
-            >
-              Configure pipeline
-            </button>
-            <button 
-              onClick={() => setPipelineBannerDismissed(true)}
-              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+      {/* Pipeline Section */}
+      {!pipelinePanelExpanded && (
+        <>
+          {/* Collapsed: No pipeline - Upsell banner */}
+          {!hasPipelineConfigured && !pipelineBannerDismissed && (
+            <div className="mb-4 flex items-center gap-4 p-3 bg-card border-l-[3px] border-l-primary border border-border rounded-r-lg">
+              <div className="shrink-0 w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary">
+                  <path d="M2 3h12v2l-4 4v4l-4 2V9L2 5V3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-[13px] font-semibold text-foreground">Automate trace curation</h4>
+                <p className="text-[11px] text-muted-foreground">
+                  Filter and add high-value traces to your eval dataset on a schedule.
+                </p>
+              </div>
+              <Button 
+                size="sm"
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => setPipelinePanelExpanded(true)}
+              >
+                Set up pipeline
+              </Button>
+            </div>
+          )}
+
+          {/* Collapsed: Pipeline active - Status bar */}
+          {hasPipelineConfigured && (
+            <div className="mb-3 flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${pipelineIsPaused ? 'bg-muted-foreground' : 'bg-success'} shrink-0`} />
+                <span className="text-muted-foreground">
+                  Pipeline {pipelineIsPaused ? 'paused' : 'active'}
+                  <span className="mx-1.5 text-border">·</span>
+                  Weekly
+                  <span className="mx-1.5 text-border">·</span>
+                  Last run 3 days ago
+                  <span className="mx-1.5 text-border">·</span>
+                  <span className="text-foreground">793 traces</span> added to <span className="text-foreground">twitter-eval-dataset v1</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setPipelinePanelExpanded(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Configure
+                </button>
+                <button 
+                  onClick={() => setPipelineIsPaused(!pipelineIsPaused)}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {pipelineIsPaused ? 'Resume' : 'Pause'}
+                </button>
+                <button className="text-sm text-muted-foreground hover:text-foreground">
+                  Run now
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Pipeline Status Line (pipeline configured) */}
-      {hasPipelineConfigured && (
-        <div className="mb-3 flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-            <span className="text-muted-foreground">
-              Trace-to-dataset pipeline active
-              <span className="mx-1.5 text-border">·</span>
-              Weekly
-              <span className="mx-1.5 text-border">·</span>
-              Last run 3 days ago
-              <span className="mx-1.5 text-border">·</span>
-              <span className="text-foreground">793 traces</span> added to <span className="text-foreground">twitter-eval-dataset v1</span>
-            </span>
+      {/* Expanded Pipeline Panel */}
+      {pipelinePanelExpanded && (
+        <div className="mb-4 p-4 bg-card border border-border rounded-lg">
+          {/* Panel Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Pipeline Configuration</h3>
+              {hasPipelineConfigured && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${pipelineIsPaused ? 'bg-muted-foreground' : 'bg-success'}`} />
+                  <span className={`text-xs ${pipelineIsPaused ? 'text-muted-foreground' : 'text-success'}`}>
+                    {pipelineIsPaused ? 'Paused' : 'Active'}
+                  </span>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => setPipelinePanelExpanded(false)}
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+            >
+              <ChevronUp className="w-3 h-3" />
+              Collapse
+            </button>
           </div>
-          <button 
-            onClick={onNavigateToPipeline}
-            className="text-sm text-primary hover:underline"
-          >
-            Configure
-          </button>
+
+          {/* Section 1: Filter Stages */}
+          <div className="mb-4">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Filter Stages</h4>
+            <div className="grid grid-cols-3 gap-3">
+              {/* Rule-based quality */}
+              <div className={`p-3 rounded-lg border ${pipelineRuleFilter ? 'border-primary/50 bg-primary/5' : 'border-border bg-secondary/30'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-foreground">Rule-based quality</span>
+                  <button
+                    onClick={() => { setPipelineRuleFilter(!pipelineRuleFilter); setPipelineHasChanges(true); }}
+                    className={`relative w-7 h-4 rounded-full transition-colors ${pipelineRuleFilter ? 'bg-primary' : 'bg-muted'}`}
+                  >
+                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${pipelineRuleFilter ? 'left-[14px]' : 'left-0.5'}`} />
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-1.5">Filter malformed traces</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">~80% retention</span>
+                  {pipelineRuleFilter && (
+                    <button 
+                      onClick={() => setExpandedFilterStage(expandedFilterStage === 'rule' ? null : 'rule')}
+                      className="text-[10px] text-primary hover:underline"
+                    >
+                      Settings
+                    </button>
+                  )}
+                </div>
+                {expandedFilterStage === 'rule' && pipelineRuleFilter && (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Min tokens</label>
+                      <input type="number" defaultValue={10} className="w-full mt-0.5 px-2 py-1 text-xs bg-secondary border border-border rounded" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Require tool calls</label>
+                      <select className="w-full mt-0.5 px-2 py-1 text-xs bg-secondary border border-border rounded">
+                        <option>Optional</option>
+                        <option>Required</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Semantic dedup */}
+              <div className={`p-3 rounded-lg border ${pipelineSemanticDedup ? 'border-blue-500/50 bg-blue-500/5' : 'border-border bg-secondary/30'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-foreground">Semantic dedup</span>
+                  <button
+                    onClick={() => { setPipelineSemanticDedup(!pipelineSemanticDedup); setPipelineHasChanges(true); }}
+                    className={`relative w-7 h-4 rounded-full transition-colors ${pipelineSemanticDedup ? 'bg-blue-500' : 'bg-muted'}`}
+                  >
+                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${pipelineSemanticDedup ? 'left-[14px]' : 'left-0.5'}`} />
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-1.5">Remove similar traces</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">10-50% retention</span>
+                  {pipelineSemanticDedup && (
+                    <button 
+                      onClick={() => setExpandedFilterStage(expandedFilterStage === 'dedup' ? null : 'dedup')}
+                      className="text-[10px] text-primary hover:underline"
+                    >
+                      Settings
+                    </button>
+                  )}
+                </div>
+                {expandedFilterStage === 'dedup' && pipelineSemanticDedup && (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Similarity threshold</label>
+                      <input type="range" min="70" max="99" defaultValue={85} className="w-full mt-0.5" />
+                      <div className="text-[10px] text-muted-foreground text-right">85%</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* LLM quality gate */}
+              <div className={`p-3 rounded-lg border ${pipelineLlmGate ? 'border-amber-500/50 bg-amber-500/5' : 'border-border bg-secondary/30'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-foreground">LLM quality gate</span>
+                  <button
+                    onClick={() => { setPipelineLlmGate(!pipelineLlmGate); setPipelineHasChanges(true); }}
+                    className={`relative w-7 h-4 rounded-full transition-colors ${pipelineLlmGate ? 'bg-amber-500' : 'bg-muted'}`}
+                  >
+                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${pipelineLlmGate ? 'left-[14px]' : 'left-0.5'}`} />
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-1.5">AI quality assessment</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">30-50% retention</span>
+                  {pipelineLlmGate && (
+                    <button 
+                      onClick={() => setExpandedFilterStage(expandedFilterStage === 'llm' ? null : 'llm')}
+                      className="text-[10px] text-primary hover:underline"
+                    >
+                      Settings
+                    </button>
+                  )}
+                </div>
+                {expandedFilterStage === 'llm' && pipelineLlmGate && (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Model</label>
+                      <select className="w-full mt-0.5 px-2 py-1 text-xs bg-secondary border border-border rounded">
+                        <option>gpt-4o-mini</option>
+                        <option>gpt-4o</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground">Quality threshold</label>
+                      <input type="range" min="1" max="10" defaultValue={7} className="w-full mt-0.5" />
+                      <div className="text-[10px] text-muted-foreground text-right">7/10</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Funnel Preview */}
+          <div className="mb-4 p-2.5 bg-secondary/50 rounded-lg">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-medium text-foreground">12,400</span>
+              <span className="text-muted-foreground">raw</span>
+              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              {pipelineRuleFilter && (
+                <>
+                  <span className="font-medium text-foreground">9,920</span>
+                  <span className="text-muted-foreground">quality</span>
+                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                </>
+              )}
+              {pipelineSemanticDedup && (
+                <>
+                  <span className="font-medium text-foreground">1,984</span>
+                  <span className="text-muted-foreground">dedup</span>
+                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                </>
+              )}
+              <span className="font-semibold text-success">
+                {pipelineLlmGate ? '793' : pipelineSemanticDedup ? '1,984' : pipelineRuleFilter ? '9,920' : '12,400'}
+              </span>
+              <span className="text-success">final</span>
+            </div>
+          </div>
+
+          {/* Section 3: Target and Schedule */}
+          <div className="mb-4 space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Target & Schedule</h4>
+            <div className="grid grid-cols-4 gap-3">
+              <div>
+                <label className="text-[10px] text-muted-foreground">Target dataset</label>
+                <select 
+                  value={pipelineTargetDataset}
+                  onChange={(e) => { setPipelineTargetDataset(e.target.value); setPipelineHasChanges(true); }}
+                  className="w-full mt-0.5 px-2 py-1.5 text-xs bg-secondary border border-border rounded"
+                >
+                  <option value="twitter-eval-dataset">twitter-eval-dataset</option>
+                  <option value="support-golden-set">support-golden-set</option>
+                  <option value="new">+ Create new</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground">Version policy</label>
+                <select 
+                  value={pipelineVersionPolicy}
+                  onChange={(e) => { setPipelineVersionPolicy(e.target.value); setPipelineHasChanges(true); }}
+                  className="w-full mt-0.5 px-2 py-1.5 text-xs bg-secondary border border-border rounded"
+                >
+                  <option value="append">Append to current</option>
+                  <option value="new">Create new version</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground">Schedule</label>
+                <select 
+                  value={pipelineSchedule}
+                  onChange={(e) => { setPipelineSchedule(e.target.value); setPipelineHasChanges(true); }}
+                  className="w-full mt-0.5 px-2 py-1.5 text-xs bg-secondary border border-border rounded"
+                >
+                  <option value="hourly">Hourly</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground">Next run</label>
+                <div className="mt-0.5 px-2 py-1.5 text-xs bg-secondary/50 border border-border rounded text-muted-foreground">
+                  {pipelineSchedule === 'hourly' ? 'In 45 min' : pipelineSchedule === 'daily' ? 'Tomorrow 2am' : 'Monday 2am'}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => { setPipelineAutoTriggerEval(!pipelineAutoTriggerEval); setPipelineHasChanges(true); }}
+                className={`relative w-7 h-4 rounded-full transition-colors ${pipelineAutoTriggerEval ? 'bg-primary' : 'bg-muted'}`}
+              >
+                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${pipelineAutoTriggerEval ? 'left-[14px]' : 'left-0.5'}`} />
+              </button>
+              <span className="text-xs text-foreground">Auto-trigger eval after pipeline run</span>
+            </div>
+          </div>
+
+          {/* Section 4: Actions */}
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setPipelineIsPaused(!pipelineIsPaused)}
+            >
+              {pipelineIsPaused ? <Play className="w-3 h-3 mr-1.5" /> : <Pause className="w-3 h-3 mr-1.5" />}
+              {pipelineIsPaused ? 'Resume' : 'Pause'} pipeline
+            </Button>
+            <Button variant="outline" size="sm">
+              <Play className="w-3 h-3 mr-1.5" />
+              Run now
+            </Button>
+            <Button 
+              size="sm"
+              className="bg-primary hover:bg-primary/90"
+              disabled={!pipelineHasChanges}
+              onClick={() => setPipelineHasChanges(false)}
+            >
+              Save changes
+            </Button>
+          </div>
         </div>
       )}
 
