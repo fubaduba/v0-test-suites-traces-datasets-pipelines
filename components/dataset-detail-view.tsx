@@ -34,6 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { AugmentDatasetPanel } from "./augment-dataset-panel"
 
 // Types
 interface DatasetRow {
@@ -332,6 +333,9 @@ export function DatasetDetailView({
     failureReason: null,
     notes: "",
   })
+  
+  // Augment panel state
+  const [showAugmentPanel, setShowAugmentPanel] = useState(false)
 
   const tabs = [
     { label: "Rows", id: "rows" as const },
@@ -571,7 +575,11 @@ export function DatasetDetailView({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="text-sm border-primary text-primary hover:bg-primary/10">
+            <Button 
+              variant="outline" 
+              className="text-sm border-primary text-primary hover:bg-primary/10"
+              onClick={() => setShowAugmentPanel(true)}
+            >
               Augment
             </Button>
             <Button variant="outline" className="text-sm">
@@ -1415,6 +1423,20 @@ export function DatasetDetailView({
             </div>
           )}
         </div>
+      )}
+
+      {/* Augment Dataset Panel */}
+      {showAugmentPanel && (
+        <AugmentDatasetPanel
+          datasetName={datasetName}
+          currentVersion={selectedVersion}
+          onClose={() => setShowAugmentPanel(false)}
+          onAddToDataset={(rows, newVersion) => {
+            // In a real app, this would add the rows to the dataset
+            console.log(`[v0] Added ${rows.length} rows, new version: v${newVersion}`)
+            setSelectedVersion(newVersion)
+          }}
+        />
       )}
     </div>
   )
