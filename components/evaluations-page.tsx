@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, ChevronDown } from "lucide-react"
+import { Search, Plus, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -30,11 +30,12 @@ interface EvaluationsPageProps {
 }
 
 // Tab types
-type TabId = "agent-health" | "evaluator-catalog" | "all-runs"
+type TabId = "agent-health" | "evaluator-catalog" | "red-team" | "all-runs"
 
-const tabs: { id: TabId; label: string }[] = [
-  { id: "agent-health", label: "Agent health" },
+const tabs: { id: TabId; label: string; badge?: string }[] = [
+  { id: "agent-health", label: "Evaluations" },
   { id: "evaluator-catalog", label: "Evaluator catalog" },
+  { id: "red-team", label: "Red team", badge: "Preview" },
   { id: "all-runs", label: "All runs" },
 ]
 
@@ -232,6 +233,51 @@ const allRunsData: EvalRun[] = [
   { id: "8", name: "Ad-hoc Run", agentName: "twitter-support-agent", status: "Completed", dataset: "twitter-eval-dataset", evaluatorCount: 6, score: 79, createdBy: "Sebastian Kohlmeier", createdOn: "3/3/26, 4:15 PM" },
 ]
 
+// Mock data for Red Team tab
+interface RedTeamRun {
+  id: string
+  name: string
+  statusOfLastRun: "Completed" | "Running" | "Failed"
+  issuesInLastRun: number
+  runs: string
+  category: "Agent" | "Model"
+  createdOn: string
+  createdBy: string
+}
+
+const redTeamData: RedTeamRun[] = [
+  {
+    id: "1",
+    name: "redteam-vto9nw1u",
+    statusOfLastRun: "Completed",
+    issuesInLastRun: 0,
+    runs: "10+",
+    category: "Agent",
+    createdOn: "2/27/26, 9:20:59 AM",
+    createdBy: "Sebastian Kohlmeier",
+  },
+  {
+    id: "2",
+    name: "redteam-x8b2f5q8",
+    statusOfLastRun: "Completed",
+    issuesInLastRun: 0,
+    runs: "10+",
+    category: "Agent",
+    createdOn: "11/15/25, 8:52:19 PM",
+    createdBy: "Sebastian Kohlmeier",
+  },
+  {
+    id: "3",
+    name: "redteam-0gb9em5g",
+    statusOfLastRun: "Completed",
+    issuesInLastRun: 0,
+    runs: "10+",
+    category: "Agent",
+    createdOn: "11/13/25, 2:21:19 PM",
+    createdBy: "Sebastian Kohlmeier",
+  },
+]
+
 // Helper functions
 function getScoreColor(score: number | null): string {
   if (score === null) return "text-muted-foreground"
@@ -326,6 +372,7 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState<string>("all")
+  const [redTeamSearch, setRedTeamSearch] = useState("")
 
   // Calculate summary stats for agent health
   const totalAgents = agentHealthData.length
@@ -340,6 +387,12 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
     const matchesStatus = statusFilter === "all" || run.status.toLowerCase() === statusFilter.toLowerCase()
     return matchesSearch && matchesStatus
   })
+
+  // Filter red team data
+  const filteredRedTeamRuns = redTeamData.filter(run => 
+    run.name.toLowerCase().includes(redTeamSearch.toLowerCase()) ||
+    run.createdBy.toLowerCase().includes(redTeamSearch.toLowerCase())
+  )
 
   return (
     <TooltipProvider>
@@ -357,6 +410,11 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
                 New evaluator
               </Button>
             )}
+            {activeTab === "red-team" && (
+              <Button className="bg-success hover:bg-success/90 text-success-foreground">
+                Create
+              </Button>
+            )}
           </div>
 
           {/* Tabs */}
@@ -365,13 +423,18 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`text-sm pb-2 border-b-2 transition-colors ${
+                className={`flex items-center gap-2 text-sm pb-2 border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? "text-primary border-primary font-medium"
+                    ? "text-foreground border-primary font-medium"
                     : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
               >
                 {tab.label}
+                {tab.badge && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -556,6 +619,107 @@ export function EvaluationsPage({ onNavigateToAgent }: EvaluationsPageProps) {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Red Team Tab */}
+          {activeTab === "red-team" && (
+            <div className="px-6 py-4">
+              {/* Description */}
+              <p className="text-sm text-muted-foreground mb-6">
+                Run automated groups of red teaming scans using the AI red teaming agent on your models or agents to identify safety and security risks.{" "}
+                <a href="#" className="text-primary hover:underline inline-flex items-center gap-1">
+                  Learn how to create a red teaming run.
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </p>
+
+              {/* Search */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search red teaming runs"
+                    value={redTeamSearch}
+                    onChange={(e) => setRedTeamSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-8"></TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Name</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Status of last run</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Issues in last run</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Runs</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Category</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Created on</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Created by</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRedTeamRuns.map((run) => (
+                    <TableRow key={run.id}>
+                      <TableCell className="w-8">
+                        <div className="w-4 h-4 rounded-full border border-border" />
+                      </TableCell>
+                      <TableCell>
+                        <button className="text-primary hover:underline font-medium">
+                          {run.name}
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className={`w-4 h-4 ${
+                            run.statusOfLastRun === "Completed" ? "text-success" :
+                            run.statusOfLastRun === "Running" ? "text-primary" :
+                            "text-destructive"
+                          }`} />
+                          <span className={`text-sm ${
+                            run.statusOfLastRun === "Completed" ? "text-success" :
+                            run.statusOfLastRun === "Running" ? "text-primary" :
+                            "text-destructive"
+                          }`}>{run.statusOfLastRun}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-foreground">{run.issuesInLastRun}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-foreground">{run.runs}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-foreground">{run.category}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">{run.createdOn}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-foreground">{run.createdBy}</span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
+                <span>1-{filteredRedTeamRuns.length} of {filteredRedTeamRuns.length}</span>
+                <div className="flex items-center gap-2">
+                  <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span>Prev</span>
+                  <span>Next</span>
+                  <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
