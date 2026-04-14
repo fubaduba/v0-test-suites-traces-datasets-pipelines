@@ -3,21 +3,6 @@
 import { useState } from "react"
 import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, ThumbsUp, ThumbsDown, Database, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AnnotateDialog, FullTemplate } from "./annotate-dialog"
-import { AnnotationWizard } from "./annotation-wizard"
-
-interface AnnotationResult {
-  id: string
-  traceId: string
-  conversationId: string
-  responseId: string
-  startTime: string
-  timestamp: string
-  thumbAnswers: Record<string, boolean | null>
-  sliderAnswers: Record<string, number>
-  multipleChoiceAnswers: Record<string, string>
-  freeFormAnswers: Record<string, string>
-}
 
 interface TraceAnnotation {
   traceId: string
@@ -30,7 +15,6 @@ interface TraceAnnotation {
 }
 
 interface TracesTableProps {
-  onAnnotationComplete: (results: AnnotationResult[], templateName: string, templateData: FullTemplate) => void
   annotations?: Record<string, TraceAnnotation>
 }
 
@@ -271,10 +255,8 @@ const existingDatasets = [
   { id: "3", name: "edge-cases-dataset", version: "Version 1", count: 42, evalSuiteId: "suite-3" },
 ]
 
-export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTableProps) {
-  const [showAnnotateDialog, setShowAnnotateDialog] = useState(false)
-  const [showAnnotationWizard, setShowAnnotationWizard] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<FullTemplate | null>(null)
+export function TracesTable({ annotations = {} }: TracesTableProps) {
+  
   
   // Create Dataset dialog state
   const [showCreateDatasetDialog, setShowCreateDatasetDialog] = useState(false)
@@ -286,26 +268,6 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
   
   // Selected time range (mocked for now)
   const selectedTimeRange = { start: "2/27/2026", end: "3/6/2026", traceCount: 847 }
-
-  const handleStartAnnotation = (template: FullTemplate) => {
-    setSelectedTemplate(template)
-    setShowAnnotateDialog(false)
-    setShowAnnotationWizard(true)
-  }
-
-  const handleAnnotationComplete = (results: AnnotationResult[]) => {
-    if (selectedTemplate) {
-      // Add unique IDs to results
-      const resultsWithIds = results.map((r) => ({
-        ...r,
-        id: `${r.traceId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      }))
-      // Pass full template data so scores can be properly displayed
-      onAnnotationComplete(resultsWithIds, selectedTemplate.name, selectedTemplate)
-    }
-    setShowAnnotationWizard(false)
-    setSelectedTemplate(null)
-  }
 
   const handleCreateDataset = () => {
     setCreateDatasetState("loading")
@@ -355,22 +317,6 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           >
             <Database className="w-4 h-4 mr-2" />
             Create Dataset
-          </Button>
-
-          {/* Annotate Button */}
-          <Button
-            variant="outline"
-            className="text-sm"
-            disabled={selectedRows.size === 0}
-            onClick={() => setShowAnnotateDialog(true)}
-          >
-            <Tag className="w-4 h-4 mr-2" />
-            Annotate
-            {selectedRows.size > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded">
-                {selectedRows.size}
-              </span>
-            )}
           </Button>
 
           <Button variant="outline" className="text-sm">
@@ -578,36 +524,6 @@ export function TracesTable({ onAnnotationComplete, annotations = {} }: TracesTa
           </tbody>
         </table>
       </div>
-
-      {/* Annotate Dialog */}
-      {showAnnotateDialog && (
-        <AnnotateDialog
-          selectedCount={selectedRows.size}
-          onClose={() => setShowAnnotateDialog(false)}
-          onStartAnnotation={handleStartAnnotation}
-        />
-      )}
-
-      {/* Annotation Wizard */}
-      {showAnnotationWizard && selectedTemplate && (
-        <AnnotationWizard
-          traces={selectedTraces.map((t) => ({
-            id: t.id,
-            conversationId: t.conversationId,
-            traceId: t.traceId,
-            responseId: t.responseId,
-            startTime: t.startTime,
-            input: t.input,
-            output: t.output,
-          }))}
-          template={selectedTemplate}
-          onClose={() => {
-            setShowAnnotationWizard(false)
-            setSelectedTemplate(null)
-          }}
-          onComplete={handleAnnotationComplete}
-        />
-      )}
 
       {/* Create Dataset Dialog */}
       {showCreateDatasetDialog && (

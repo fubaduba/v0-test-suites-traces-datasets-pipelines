@@ -250,7 +250,6 @@ export default function AgentMonitoringPage() {
         {/* Content based on active tab */}
         {activeTab === "traces" && (
           <TracesTable 
-            onAnnotationComplete={handleAnnotationComplete} 
             annotations={traceAnnotations}
           />
         )}
