@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button"
 
 // Sample datasets matching the screenshot
 const datasets = [
-  { id: "1", name: "zava-outdoors-synth-quality-v8", description: "", tags: "eval_id:eval_3b88e5dfa5f04e2fae894f016a01acc9, eval_run_id:evalrun_e52947086c0e46519159ddfc82b15 url_file type:SyntheticData", type: "uri_file" },
-  { id: "2", name: "zava-outdoors-synth-v8", description: "", tags: "eval_id:eval_b930f20c25734120ae77d59bf76a9571, eval_run_id:evalrun_a3e61948ef7043589f4dede82211f2 url_file type:SyntheticData", type: "uri_file" },
-  { id: "3", name: "zava-outdoors-dataset", description: "", tags: "", type: "uri_file" },
-  { id: "4", name: "filisha_test_xkj9wp1g0s", description: "", tags: "eval_id:eval_d543d217db8a49b3818543aeaf418431, eval_run_id:evalrun_6b061db4881f40cbb89e1fa094892 url_file type:SyntheticData", type: "uri_file" },
-  { id: "5", name: "teststorage", description: "teststorage", tags: "", type: "uri_file" },
-  { id: "6", name: "eval-dataset-api-20260117005136", description: "", tags: "", type: "uri_file" },
-  { id: "7", name: "eval-dataset-api-20260117005037", description: "", tags: "", type: "uri_file" },
-  { id: "8", name: "twitter-eval-dataset-v2", description: "twitter-eval-dataset-v2", tags: "", type: "uri_file" },
-  { id: "9", name: "twitter-support-agent", description: "twitter-support-agent", tags: "", type: "uri_file" },
+  { id: "1", name: "zava-outdoors-synth-quality-v8", description: "", tags: "eval_id:eval_3b88e5dfa5f04e2fae894f016a01acc9, eval_run_id:evalrun_e52947086c0e46519159ddfc82b15 url_file type:SyntheticData", type: "uri_file", source: "synthetic" as const },
+  { id: "2", name: "zava-outdoors-synth-v8", description: "", tags: "eval_id:eval_b930f20c25734120ae77d59bf76a9571, eval_run_id:evalrun_a3e61948ef7043589f4dede82211f2 url_file type:SyntheticData", type: "uri_file", source: "synthetic" as const },
+  { id: "3", name: "zava-outdoors-dataset", description: "", tags: "", type: "uri_file", source: "traces" as const },
+  { id: "4", name: "filisha_test_xkj9wp1g0s", description: "", tags: "eval_id:eval_d543d217db8a49b3818543aeaf418431, eval_run_id:evalrun_6b061db4881f40cbb89e1fa094892 url_file type:SyntheticData", type: "uri_file", source: "synthetic" as const },
+  { id: "5", name: "teststorage", description: "teststorage", tags: "", type: "uri_file", source: "traces" as const },
+  { id: "6", name: "eval-dataset-api-20260117005136", description: "", tags: "", type: "uri_file", source: "traces" as const },
+  { id: "7", name: "eval-dataset-api-20260117005037", description: "", tags: "", type: "uri_file", source: "traces" as const },
+  { id: "8", name: "twitter-eval-dataset-v2", description: "twitter-eval-dataset-v2", tags: "", type: "uri_file", source: "traces" as const },
+  { id: "9", name: "twitter-support-agent", description: "twitter-support-agent", tags: "", type: "uri_file", source: "synthetic" as const },
 ]
 
 // Agents for dropdown
@@ -233,6 +233,7 @@ export function DataView({ defaultSubTab = "datasets", onClose }: DataViewProps)
                 <tr className="border-b border-border">
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Source</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tags</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
                 </tr>
@@ -244,6 +245,15 @@ export function DataView({ defaultSubTab = "datasets", onClose }: DataViewProps)
                       <span className="text-primary hover:underline cursor-pointer">{dataset.name}</span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{dataset.description}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                        dataset.source === "traces" 
+                          ? "bg-success/15 text-success" 
+                          : "bg-primary/15 text-primary"
+                      }`}>
+                        {dataset.source === "traces" ? "Traces" : "Synthetic"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">{dataset.tags}</td>
                     <td className="px-4 py-3 text-muted-foreground">{dataset.type}</td>
                   </tr>
