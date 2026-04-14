@@ -266,6 +266,10 @@ export function TracesTable({ annotations = {} }: TracesTableProps) {
   const [createDatasetJudgeModel, setCreateDatasetJudgeModel] = useState("gpt-4.1")
   const [createDatasetState, setCreateDatasetState] = useState<"form" | "loading" | "success">("form")
   
+  // Info line state
+  const [infoLineDismissed, setInfoLineDismissed] = useState(false)
+  const hasCreatedDataset = true // Mock: agent has created at least one dataset
+  
   // Selected time range (mocked for now)
   const selectedTimeRange = { start: "2/27/2026", end: "3/6/2026", traceCount: 847 }
 
@@ -338,6 +342,40 @@ export function TracesTable({ annotations = {} }: TracesTableProps) {
           ))}
         </div>
       </div>
+
+      {/* Dataset Info Line */}
+      {!infoLineDismissed && (
+        <div className="mb-3 flex items-center justify-between py-2 px-3 border-l-2 border-l-primary bg-secondary/30 rounded-r text-sm">
+          {hasCreatedDataset ? (
+            <p className="text-muted-foreground">
+              Last dataset created 3 days ago from 847 traces → 98 rows in <span className="text-foreground">twitter-support-agent-traces</span>.{" "}
+              <button 
+                onClick={() => setShowCreateDatasetDialog(true)}
+                className="text-primary hover:underline"
+              >
+                Create new dataset
+              </button>{" "}
+              to capture recent traces.
+            </p>
+          ) : (
+            <p className="text-muted-foreground">
+              Tip: Create an evaluation dataset from your production traces to improve agent quality.{" "}
+              <button 
+                onClick={() => setShowCreateDatasetDialog(true)}
+                className="text-primary hover:underline"
+              >
+                Create dataset
+              </button>
+            </p>
+          )}
+          <button 
+            onClick={() => setInfoLineDismissed(true)}
+            className="ml-3 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
