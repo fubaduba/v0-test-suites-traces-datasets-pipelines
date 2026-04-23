@@ -1,17 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MoreHorizontal, Play, ChevronDown, Settings, ArrowDown, ArrowUp, ArrowLeft, Pencil, Check, Loader2 } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowLeft, Pencil, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EvalResultsView } from "./eval-results-view"
 import { SetupContinuousEval } from "./setup-continuous-eval"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
 import {
   Tooltip,
   TooltipContent,
@@ -537,26 +530,18 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
                   return (
                     <div
                       key={evaluator.id}
-                      className={`p-4 rounded-lg border transition-colors ${evaluator.enabled ? 'border-border bg-card' : 'border-border/50 bg-secondary/30 opacity-60'}`}
+                      className="p-4 rounded-lg border border-border bg-card"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-semibold ${icon.color}`}>
-                            {icon.letter}
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-foreground">{evaluator.name}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {isEvaluatorOnly ? "Online eval - sampled traffic" : evaluator.type}
-                            </p>
-                          </div>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-semibold ${icon.color}`}>
+                          {icon.letter}
                         </div>
-                        <button
-                          onClick={() => toggleEvaluator(evaluator.id, !isEvaluatorOnly)}
-                          className={`relative w-9 h-5 rounded-full transition-colors ${evaluator.enabled ? 'bg-primary' : 'bg-muted'}`}
-                        >
-                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${evaluator.enabled ? 'left-[18px]' : 'left-0.5'}`} />
-                        </button>
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">{evaluator.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {isEvaluatorOnly ? "Online eval - sampled traffic" : evaluator.type}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )
@@ -578,10 +563,6 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-medium text-foreground">Test cases</h4>
-                      <button className="text-xs text-primary hover:underline flex items-center gap-1">
-                        <Pencil className="w-3 h-3" />
-                        edit
-                      </button>
                     </div>
                     <div className="border border-border rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
@@ -675,16 +656,10 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
               </>
             )}
 
-            {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4">
+            {/* Back button */}
+            <div className="flex items-center justify-start pt-4">
               <Button variant="ghost" onClick={() => setSelectedSuite(null)}>
                 Back
-              </Button>
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10" onClick={onEditEvaluators}>
-                Edit evaluators
-              </Button>
-              <Button className="bg-primary hover:bg-primary/90" onClick={() => setShowRunResults(true)}>
-                {isEvaluatorOnly ? "View live results" : "Run test suite"}
               </Button>
             </div>
           </div>
@@ -701,16 +676,8 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-foreground">Test suites</h2>
+              <h2 className="text-xl font-semibold text-foreground">Evaluation Suites</h2>
               <span className="text-muted-foreground">({testSuites.length})</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => setShowSetupContinuousEval(true)}>
-                Setup continuous eval
-              </Button>
-              <Button className="bg-primary hover:bg-primary/90" onClick={handleGenerateTestSuite}>
-                Generate test suite
-              </Button>
             </div>
           </div>
 
@@ -720,12 +687,10 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
               <thead className="bg-secondary/50">
                 <tr className="border-b border-border">
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kind</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Dataset</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Evaluators</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Last run</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Last score</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -737,17 +702,6 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
                   >
                     <td className="px-4 py-3">
                       <span className="text-primary hover:underline font-medium">{suite.name}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {suite.kind === "dataset-backed" ? (
-                        <span className="inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                          dataset-backed
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-md border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                          evaluator-only
-                        </span>
-                      )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {suite.dataset ? (
@@ -809,45 +763,6 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
                         <span className="text-muted-foreground/50">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        {suite.isActive ? (
-                          <button className="text-primary text-sm hover:underline">
-                            Configure
-                          </button>
-                        ) : (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-7 px-2">
-                                <Play className="w-3 h-3 mr-1" />
-                                Run
-                                <ChevronDown className="w-3 h-3 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              <DropdownMenuItem>Run batch eval</DropdownMenuItem>
-                              <DropdownMenuItem>Run on specific version</DropdownMenuItem>
-                              <DropdownMenuItem>Compare with previous</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                            <DropdownMenuItem>Run now</DropdownMenuItem>
-                            <DropdownMenuItem>Use in CI/CD</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -857,17 +772,13 @@ export function TestSuiteReview({ onSkip, onEditEvaluators, onRunTestSuites, onN
           {/* Trace-to-dataset Pipeline Section */}
           <div className="space-y-3 pt-4">
             <h3 className="text-base font-medium text-foreground">Trace-to-dataset pipeline</h3>
-            <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+            <div className="p-4 bg-secondary/30 rounded-lg border border-border">
               <div className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-success shrink-0" />
                 <span className="text-sm text-foreground">
                   Active - weekly schedule - last run 3 days ago - <span className="text-primary">793 traces</span> added to twitter-eval-dataset v1
                 </span>
               </div>
-              <button className="text-sm text-primary hover:underline flex items-center gap-1">
-                <Settings className="w-4 h-4" />
-                Configure pipeline
-              </button>
             </div>
           </div>
         </div>
