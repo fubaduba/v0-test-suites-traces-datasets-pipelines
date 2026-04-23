@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, ThumbsUp, ThumbsDown, Database, X, Play, FileText, Pencil } from "lucide-react"
+import { Search, ChevronDown, Calendar, HelpCircle, CheckCircle, ThumbsUp, ThumbsDown, Database, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface TraceAnnotation {
@@ -696,7 +696,7 @@ export function TracesTable({ annotations = {} }: TracesTableProps) {
             {/* Success State */}
             {createDatasetState === "success" && (
               <div className="p-6">
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-success/15 flex items-center justify-center">
                     <CheckCircle className="w-5 h-5 text-success" />
                   </div>
@@ -705,49 +705,16 @@ export function TracesTable({ annotations = {} }: TracesTableProps) {
                     <p className="text-sm text-muted-foreground">{createDatasetName} (98 rows)</p>
                   </div>
                 </div>
-                
-                {/* Action Cards */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {/* Run evaluation - Primary */}
-                  <button 
-                    onClick={resetCreateDatasetDialog}
-                    className="p-3 rounded-lg border-2 border-primary bg-primary/5 text-left hover:bg-primary/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Play className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-foreground">Run evaluation</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Evaluate your agent against this dataset.</p>
-                  </button>
 
-                  {/* Generate test suite - Outline */}
-                  <button 
-                    onClick={resetCreateDatasetDialog}
-                    className="p-3 rounded-lg border border-border bg-card text-left hover:border-muted-foreground/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Generate test suite</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Create evaluators and thresholds for this dataset.</p>
-                  </button>
-
-                  {/* View in Data Wrangler - Outline */}
-                  <button 
-                    onClick={resetCreateDatasetDialog}
-                    className="p-3 rounded-lg border border-border bg-card text-left hover:border-muted-foreground/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Pencil className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">View in Data Wrangler</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Inspect and edit the dataset locally.</p>
-                  </button>
-                </div>
-
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-muted-foreground">
                   Dataset saved to Foundry and cached at <span className="font-mono">.foundry/datasets/{createDatasetName}.jsonl</span>
                 </p>
+
+                <div className="flex justify-end mt-4">
+                  <Button onClick={resetCreateDatasetDialog}>
+                    Done
+                  </Button>
+                </div>
               </div>
             )}
           </div>
