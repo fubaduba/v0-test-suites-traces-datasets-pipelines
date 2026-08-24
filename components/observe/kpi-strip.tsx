@@ -149,7 +149,6 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
         </div>
         <div className="flex flex-col text-[10px] leading-tight text-muted-foreground">
           <span>Evals 4/12</span>
-          <span>Success criteria 3/12</span>
         </div>
       </Tile>
     </div>

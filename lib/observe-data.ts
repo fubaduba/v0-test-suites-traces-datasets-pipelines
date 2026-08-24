@@ -15,7 +15,7 @@ export interface FleetAgent {
   cost: number
   lastDeployment: string
   version: string
-  coverage: { tracing: boolean; evals: boolean; criteria: boolean }
+  coverage: { tracing: boolean; evals: boolean }
   drawerContext: string
 }
 
@@ -35,7 +35,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 156.4,
     lastDeployment: "Aug 22, 14:10",
     version: "v17",
-    coverage: { tracing: true, evals: true, criteria: true },
+    coverage: { tracing: true, evals: true },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: groundedness regression · suspected cause: gpt4o-prod-eastus2",
   },
@@ -54,7 +54,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 61.2,
     lastDeployment: "Aug 21, 09:02",
     version: "v9",
-    coverage: { tracing: true, evals: true, criteria: false },
+    coverage: { tracing: true, evals: true },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: invocation failures without spans · suspected cause: auth misconfiguration",
   },
@@ -73,7 +73,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 38.9,
     lastDeployment: "Aug 22, 14:10",
     version: "v6",
-    coverage: { tracing: true, evals: true, criteria: true },
+    coverage: { tracing: true, evals: true },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: groundedness regression · suspected cause: gpt4o-prod-eastus2",
   },
@@ -93,7 +93,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 84.7,
     lastDeployment: "Aug 23, 18:44",
     version: "v12",
-    coverage: { tracing: true, evals: false, criteria: false },
+    coverage: { tracing: true, evals: false },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: token consumption anomaly · suspected cause: tool call retry loop",
   },
@@ -112,7 +112,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 21.4,
     lastDeployment: "Aug 23, 07:15",
     version: "v22",
-    coverage: { tracing: true, evals: true, criteria: true },
+    coverage: { tracing: true, evals: true },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: latency recovery · suspected cause: prompt v21 (rolled back)",
   },
@@ -131,7 +131,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 0,
     lastDeployment: "Aug 12, 11:30",
     version: "v2",
-    coverage: { tracing: false, evals: false, criteria: false },
+    coverage: { tracing: false, evals: false },
     drawerContext: "No telemetry connected. Enable tracing to populate the Monitor tab for this agent.",
   },
   {
@@ -139,7 +139,7 @@ export const fleetAgents: FleetAgent[] = [
     name: "acrtest-py-img-20260717",
     status: "healthy",
     attention: 41,
-    attentionWhy: "Error rate within baseline · no success criteria defined",
+    attentionWhy: "Error rate within baseline · no evals configured",
     invocations: 4410,
     errorRate: 1.4,
     taskCompletion: null,
@@ -149,7 +149,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 12.8,
     lastDeployment: "Aug 20, 16:02",
     version: "v4",
-    coverage: { tracing: true, evals: false, criteria: false },
+    coverage: { tracing: true, evals: false },
     drawerContext:
       "Opens agent Monitor tab with context: timeframe 24h · filter: coverage gaps · no active findings",
   },
@@ -168,7 +168,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 9.6,
     lastDeployment: "Aug 19, 10:41",
     version: "v3",
-    coverage: { tracing: true, evals: false, criteria: false },
+    coverage: { tracing: true, evals: false },
     drawerContext: "Opens agent Monitor tab with context: timeframe 24h · no active findings",
   },
   {
@@ -186,7 +186,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 8.2,
     lastDeployment: "Aug 18, 13:20",
     version: "v3",
-    coverage: { tracing: true, evals: false, criteria: false },
+    coverage: { tracing: true, evals: false },
     drawerContext: "Opens agent Monitor tab with context: timeframe 24h · no active findings",
   },
   {
@@ -204,7 +204,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 6.4,
     lastDeployment: "Aug 18, 13:20",
     version: "v2",
-    coverage: { tracing: true, evals: false, criteria: false },
+    coverage: { tracing: true, evals: false },
     drawerContext: "Opens agent Monitor tab with context: timeframe 24h · no active findings",
   },
   {
@@ -222,7 +222,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 1.1,
     lastDeployment: "Aug 15, 08:55",
     version: "v1",
-    coverage: { tracing: false, evals: false, criteria: false },
+    coverage: { tracing: false, evals: false },
     drawerContext: "Telemetry stale >24h. Diagnose the exporter to restore Monitor data.",
   },
   {
@@ -240,7 +240,7 @@ export const fleetAgents: FleetAgent[] = [
     cost: 11.3,
     lastDeployment: "Aug 21, 09:02",
     version: "v8",
-    coverage: { tracing: true, evals: true, criteria: false },
+    coverage: { tracing: true, evals: true },
     drawerContext: "Opens agent Monitor tab with context: timeframe 24h · no active findings",
   },
 ]
@@ -365,7 +365,6 @@ export interface ReadinessItem {
 export const readinessItems: ReadinessItem[] = [
   { id: "tracing", label: "testprompt727: tracing not configured", action: "Connect" },
   { id: "evals", label: "8 agents without evals", action: "Enable" },
-  { id: "criteria", label: "9 agents without success criteria", action: "Define" },
   { id: "stale", label: "2 agents stale >24h", action: "Diagnose" },
   {
     id: "eval-failed",

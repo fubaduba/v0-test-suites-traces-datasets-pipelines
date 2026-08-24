@@ -27,7 +27,6 @@ function CoverageBadges({ coverage }: { coverage: FleetAgent["coverage"] }) {
   const badges = [
     { key: "T", on: coverage.tracing, title: "Tracing" },
     { key: "E", on: coverage.evals, title: "Evaluations" },
-    { key: "ext", on: coverage.criteria, title: "Success criteria" },
   ]
   return (
     <span className="flex items-center gap-1">
