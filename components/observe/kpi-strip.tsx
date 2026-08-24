@@ -52,7 +52,7 @@ function Tile({
 
 export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, onFocusTable }: KpiStripProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-2">
       {/* Fleet status */}
       <Tile name="Fleet status" onClick={onFocusTable}>
         <div className="flex flex-col gap-1">
@@ -121,8 +121,8 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
           </span>
         </div>
         <div className="flex flex-col text-[10px] leading-tight text-muted-foreground">
-          <span className="truncate">Tokens $348 · Hosting $64 (vCPU + GiB)</span>
-          <span className="truncate">top consumer: luffy-travel-approver-002 (38%)</span>
+          <span className="truncate">Tokens $348 · Hosting $64</span>
+          <span className="truncate">top: luffy-travel-approver-002 (38%)</span>
         </div>
       </Tile>
 
