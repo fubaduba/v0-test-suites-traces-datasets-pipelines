@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { X } from "lucide-react"
 import type { Insight } from "@/lib/observe-data"
 
@@ -18,6 +19,15 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export function CreateAlertModal({ insight, onClose }: CreateAlertModalProps) {
+  useEffect(() => {
+    if (!insight) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [insight, onClose])
+
   if (!insight) return null
 
   return (

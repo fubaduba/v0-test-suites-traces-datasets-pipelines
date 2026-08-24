@@ -17,7 +17,7 @@ const severityDot = {
 
 export function RightRail({ highlightReadiness, onCollapse }: RightRailProps) {
   return (
-    <aside className="w-[320px] shrink-0 border-l border-border bg-sidebar overflow-y-auto">
+    <aside className="absolute inset-y-0 right-0 z-30 w-[320px] max-w-[85vw] shadow-2xl xl:static xl:z-auto xl:shadow-none shrink-0 border-l border-border bg-sidebar overflow-y-auto">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Readiness &amp; alerts</span>
         <button

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { PanelRightOpen } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -18,13 +18,19 @@ type Filter = "all" | "attention" | "critical" | "unmonitored"
 export function ObserveView() {
   const [timeframe, setTimeframe] = useState<(typeof timeframes)[number]>("24h")
   const [filter, setFilter] = useState<Filter>("all")
-  const [railOpen, setRailOpen] = useState(true)
+  const [railOpen, setRailOpen] = useState(false)
   const [highlightReadiness, setHighlightReadiness] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
   const [alertInsight, setAlertInsight] = useState<Insight | null>(null)
 
   const insightsRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLDivElement>(null)
+
+  // Open the rail by default only where it can dock beside the content (xl and up).
+  // Done after mount so server and client render the same initial markup.
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1280px)").matches) setRailOpen(true)
+  }, [])
 
   const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) =>
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -42,7 +48,7 @@ export function ObserveView() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="relative flex-1 flex min-h-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col gap-5 px-5 py-4">
             {/* Page title */}
@@ -110,7 +116,17 @@ export function ObserveView() {
           </div>
         </div>
 
-        {railOpen && <RightRail highlightReadiness={highlightReadiness} onCollapse={() => setRailOpen(false)} />}
+        {railOpen && (
+          <>
+            <button
+              type="button"
+              aria-label="Close readiness panel"
+              onClick={() => setRailOpen(false)}
+              className="absolute inset-0 z-20 bg-background/60 xl:hidden"
+            />
+            <RightRail highlightReadiness={highlightReadiness} onCollapse={() => setRailOpen(false)} />
+          </>
+        )}
 
         <AgentDrawer agent={selectedAgent} onClose={() => setSelectedAgent(null)} />
         <CreateAlertModal insight={alertInsight} onClose={() => setAlertInsight(null)} />

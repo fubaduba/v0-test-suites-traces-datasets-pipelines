@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ExternalLink, X } from "lucide-react"
 import type { FleetAgent } from "@/lib/observe-data"
@@ -14,6 +14,15 @@ interface AgentDrawerProps {
 
 export function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Traces")
+
+  useEffect(() => {
+    if (!agent) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [agent, onClose])
 
   if (!agent) return null
 
