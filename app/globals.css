@@ -38,6 +38,8 @@
   --sidebar-border: oklch(0.22 0 0);
   --sidebar-ring: oklch(0.65 0.2 280);
   --success: oklch(0.7 0.15 145);
+  --warning: oklch(0.78 0.15 75);
+  --danger: oklch(0.63 0.2 25);
 }
 
 
@@ -82,6 +84,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 @layer base {

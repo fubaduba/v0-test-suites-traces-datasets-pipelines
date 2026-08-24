@@ -3,14 +3,16 @@
 import { cn } from "@/lib/utils"
 import {
   Bot,
-  GitBranch,
   Box,
-  Sliders,
+  Boxes,
   Wrench,
   BookOpen,
-  Database,
-  LineChart,
+  Brain,
   Shield,
+  Database,
+  Activity,
+  LineChart,
+  Sliders,
   Settings,
 } from "lucide-react"
 
@@ -19,21 +21,36 @@ interface SidebarProps {
   onSectionChange?: (section: string) => void
 }
 
-const navItems = [
-  { icon: Bot, label: "Agents", id: "agents" },
-  { icon: GitBranch, label: "Workflows", id: "workflows" },
-  { icon: Box, label: "Models", id: "models" },
-  { icon: Sliders, label: "Fine-tune", id: "finetune" },
-  { icon: Wrench, label: "Tools", id: "tools" },
-  { icon: BookOpen, label: "Knowledge", id: "knowledge" },
-  { icon: Database, label: "Data", id: "data" },
-  { icon: LineChart, label: "Evaluations", id: "evaluations" },
-  { icon: Shield, label: "Guardrails", id: "guardrails" },
+const sections = [
+  {
+    label: "Create",
+    items: [
+      { icon: Bot, label: "Agents", id: "agents" },
+      { icon: Box, label: "Models", id: "models" },
+      { icon: Boxes, label: "Services", id: "services" },
+      { icon: Wrench, label: "Tools", id: "tools" },
+      { icon: BookOpen, label: "Knowledge", id: "knowledge" },
+      { icon: Brain, label: "Memory", id: "memory" },
+      { icon: Shield, label: "Guardrails", id: "guardrails" },
+      { icon: Database, label: "Data", id: "data" },
+    ],
+  },
+  {
+    label: "Operate",
+    items: [{ icon: Activity, label: "Observe", id: "observe" }],
+  },
+  {
+    label: "Optimize",
+    items: [
+      { icon: LineChart, label: "Evaluations", id: "evaluations" },
+      { icon: Sliders, label: "Fine-tune", id: "finetune" },
+    ],
+  },
 ]
 
-export function Sidebar({ activeSection = "agents", onSectionChange }: SidebarProps) {
+export function Sidebar({ activeSection = "observe", onSectionChange }: SidebarProps) {
   return (
-    <aside className="w-[180px] min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
+    <aside className="w-[200px] min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
         <div className="w-5 h-5 bg-primary rounded-sm flex items-center justify-center">
@@ -44,29 +61,39 @@ export function Sidebar({ activeSection = "agents", onSectionChange }: SidebarPr
 
       {/* Project Selector */}
       <div className="px-3 py-2 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <span>/</span>
-          <span className="text-sidebar-foreground">zava-outdoors</span>
+          <span className="text-sidebar-foreground truncate">luechen-sc-fdp-1</span>
           <span className="text-xs">▾</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-2">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={() => onSectionChange?.(item.id)}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors",
-              activeSection === item.id
-                ? "text-sidebar-foreground bg-sidebar-accent"
-                : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-            )}
-          >
-            <item.icon className="w-4 h-4" />
-            <span>{item.label}</span>
-          </button>
+      <nav className="flex-1 py-2 overflow-y-auto">
+        {sections.map((section) => (
+          <div key={section.label} className="pb-1">
+            <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {section.label}
+            </div>
+            {section.items.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onSectionChange?.(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-4 py-1.5 text-[13px] transition-colors relative",
+                  activeSection === item.id
+                    ? "text-sidebar-foreground bg-sidebar-accent"
+                    : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+                )}
+              >
+                {activeSection === item.id && (
+                  <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary" aria-hidden="true" />
+                )}
+                <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+                <span className="truncate">{item.label}</span>
+              </button>
+            ))}
+          </div>
         ))}
       </nav>
 

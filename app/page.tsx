@@ -8,6 +8,8 @@ import { TracesTable } from "@/components/traces-table"
 import { EvaluationView } from "@/components/evaluation-view"
 import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
 import { DataView } from "@/components/data-view"
+import { ObserveView } from "@/components/observe-view"
+import { cn } from "@/lib/utils"
 
 interface ThumbQuestion {
   id: string
@@ -66,8 +68,8 @@ interface TraceAnnotation {
 }
 
 export default function AgentMonitoringPage() {
-  const [activeTab, setActiveTab] = useState("traces")
-  const [sidebarSection, setSidebarSection] = useState("agents")
+  const [activeTab, setActiveTab] = useState("observe")
+  const [sidebarSection, setSidebarSection] = useState("observe")
   const [dataSubTab, setDataSubTab] = useState("datasets")
   const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({
     // Prepopulated end-user annotations
@@ -224,8 +226,10 @@ export default function AgentMonitoringPage() {
     // setActiveTab("evaluation") - removed, stay on traces
   }
 
+  const isObserve = sidebarSection === "observe"
+
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className={cn("flex bg-background", isObserve ? "h-screen overflow-hidden" : "min-h-screen")}>
       {/* Sidebar */}
       <Sidebar 
         activeSection={sidebarSection} 
@@ -235,17 +239,21 @@ export default function AgentMonitoringPage() {
             setActiveTab("data")
           } else if (section === "agents") {
             setActiveTab("traces")
+          } else if (section === "observe") {
+            setActiveTab("observe")
           }
         }}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
         <Header />
 
+        {isObserve && <ObserveView />}
+
         {/* Agent Header with tabs */}
-        <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        {!isObserve && <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />}
 
         {/* Content based on active tab */}
         {activeTab === "traces" && (
@@ -284,6 +292,12 @@ export default function AgentMonitoringPage() {
             defaultSubTab={dataSubTab} 
             onClose={() => setActiveTab("traces")} 
           />
+        )}
+
+        {!isObserve && !["traces", "evaluation", "playground", "monitor", "data"].includes(activeTab) && (
+          <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+            {sidebarSection} — placeholder
+          </div>
         )}
       </div>
     </div>
