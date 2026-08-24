@@ -33,7 +33,6 @@ export function Header() {
           <button className="text-muted-foreground hover:text-foreground">Home</button>
           <button className="text-muted-foreground hover:text-foreground">Discover</button>
           <button className="text-foreground font-medium">Build</button>
-          <button className="text-muted-foreground hover:text-foreground">Operate</button>
           <button className="text-muted-foreground hover:text-foreground">Manage</button>
           <button className="text-muted-foreground hover:text-foreground">Docs</button>
         </nav>
