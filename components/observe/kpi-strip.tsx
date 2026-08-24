@@ -7,7 +7,7 @@ import { AlertTriangle, ArrowDown, ArrowUp } from "lucide-react"
 interface KpiStripProps {
   onFilterCritical: () => void
   onFocusReadiness: () => void
-  onFocusInsights: () => void
+  onOpenQuality: () => void
   onFocusTable: () => void
 }
 
@@ -22,8 +22,9 @@ function Tile({
   warn?: boolean
   children: React.ReactNode
   onClick?: () => void
-  partial?: string
+  partial?: string | string[]
 }) {
+  const notes = partial === undefined ? [] : Array.isArray(partial) ? partial : [partial]
   return (
     <button
       type="button"
@@ -35,17 +36,21 @@ function Tile({
     >
       <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate">{name}</span>
       {children}
-      {partial && (
-        <span className="flex items-center gap-1 pt-0.5 border-t border-dashed border-warning/40 text-[10px] text-warning/90 leading-tight">
-          <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
-          <span className="truncate">{partial}</span>
+      {notes.length > 0 && (
+        <span className="flex flex-col gap-0.5 pt-0.5 border-t border-dashed border-warning/40">
+          {notes.map((note) => (
+            <span key={note} className="flex items-center gap-1 text-[10px] text-warning/90 leading-tight">
+              <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+              <span className="truncate">{note}</span>
+            </span>
+          ))}
         </span>
       )}
     </button>
   )
 }
 
-export function KpiStrip({ onFilterCritical, onFocusReadiness, onFocusInsights, onFocusTable }: KpiStripProps) {
+export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, onFocusTable }: KpiStripProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
       {/* Fleet status */}
@@ -83,10 +88,15 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onFocusInsights, 
       </Tile>
 
       {/* Quality trend */}
-      <Tile name="Quality trend" warn onClick={onFocusInsights} partial="across 4 of 12 agents with evals">
+      <Tile
+        name="Quality trend"
+        warn
+        onClick={onOpenQuality}
+        partial={["across 4 of 12 agents with evals", "partial data — 1 eval run failed"]}
+      >
         <div className="flex items-end justify-between gap-2">
-          <span className="text-lg font-semibold text-warning leading-none">−4.2 pts</span>
-          <Sparkline data={[86, 85, 84, 83, 81, 80, 79]} tone="down" />
+          <span className="text-base font-semibold text-warning leading-none whitespace-nowrap">−4.2 pts</span>
+          <Sparkline data={[86, 85, 84, 83, 81, 80, 79]} tone="down" width={34} className="shrink-0" />
         </div>
         <span className="text-[11px] text-muted-foreground">vs 7-day baseline</span>
       </Tile>
@@ -110,9 +120,10 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onFocusInsights, 
             18%
           </span>
         </div>
-        <span className="text-[11px] text-muted-foreground truncate">
-          top consumer: luffy-travel-approver-002 (38%)
-        </span>
+        <div className="flex flex-col text-[10px] leading-tight text-muted-foreground">
+          <span className="truncate">Tokens $348 · Hosting $64 (vCPU + GiB)</span>
+          <span className="truncate">top consumer: luffy-travel-approver-002 (38%)</span>
+        </div>
       </Tile>
 
       {/* Capacity */}
@@ -124,7 +135,9 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onFocusInsights, 
         <div className="h-1 bg-secondary">
           <div className="h-1 bg-primary" style={{ width: "71%" }} />
         </div>
-        <span className="text-[11px] text-muted-foreground">429 rate 0.8% · headroom ~9 days</span>
+        <span className="text-[10px] leading-tight text-muted-foreground">
+          429 rate 0.8% · hosting 54% vCPU · headroom ~9 days
+        </span>
       </Tile>
 
       {/* Coverage */}

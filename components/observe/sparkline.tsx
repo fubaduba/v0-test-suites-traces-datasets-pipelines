@@ -35,6 +35,9 @@ export function Sparkline({ data, width = 56, height = 16, tone = "flat", classN
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
+      // Stretch to the CSS box so `w-full` callers fill their container instead of
+      // letting the drawing float centered at its intrinsic size.
+      preserveAspectRatio="none"
       className={className}
       aria-hidden="true"
       focusable="false"
@@ -46,6 +49,7 @@ export function Sparkline({ data, width = 56, height = 16, tone = "flat", classN
         strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   )

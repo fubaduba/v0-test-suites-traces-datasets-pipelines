@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import { PanelRightOpen } from "lucide-react"
+import { ExternalLink, PanelRightOpen } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { KpiStrip } from "@/components/observe/kpi-strip"
+import { QualityPanel } from "@/components/observe/quality-panel"
 import { InsightsPanel } from "@/components/observe/insights-panel"
 import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
@@ -23,8 +24,11 @@ export function ObserveView() {
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
   const [alertInsight, setAlertInsight] = useState<Insight | null>(null)
 
+  const [qualityOpen, setQualityOpen] = useState(false)
+
   const insightsRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLDivElement>(null)
+  const qualityRef = useRef<HTMLDivElement>(null)
 
   // Open the rail by default only where it can dock beside the content (xl and up).
   // Done after mount so server and client render the same initial markup.
@@ -39,6 +43,12 @@ export function ObserveView() {
     setRailOpen(true)
     setHighlightReadiness(true)
     window.setTimeout(() => setHighlightReadiness(false), 2200)
+  }
+
+  const openQuality = () => {
+    setQualityOpen(true)
+    // Let the panel mount before scrolling it into view.
+    window.requestAnimationFrame(() => scrollTo(qualityRef))
   }
 
   const filterCritical = () => {
@@ -77,6 +87,13 @@ export function ObserveView() {
                     </button>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 px-2 py-1 text-[11px] bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Open in Azure Monitor
+                  <ExternalLink className="w-3 h-3" />
+                </button>
                 {!railOpen && (
                   <button
                     type="button"
@@ -94,9 +111,19 @@ export function ObserveView() {
             <KpiStrip
               onFilterCritical={filterCritical}
               onFocusReadiness={focusReadiness}
-              onFocusInsights={() => scrollTo(insightsRef)}
+              onOpenQuality={openQuality}
               onFocusTable={() => scrollTo(tableRef)}
             />
+
+            {/* Quality module — expands from the Quality trend tile */}
+            <div ref={qualityRef} className="scroll-mt-4">
+              <QualityPanel
+                open={qualityOpen}
+                onToggle={() => setQualityOpen((current) => !current)}
+                onClose={() => setQualityOpen(false)}
+                onViewRegressionInsight={() => scrollTo(insightsRef)}
+              />
+            </div>
 
             {/* Layer 2 */}
             <div ref={insightsRef} className="scroll-mt-4">

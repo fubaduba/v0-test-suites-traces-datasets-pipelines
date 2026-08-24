@@ -35,26 +35,50 @@ function DetailRow({ label, value, muted }: { label: string; value: React.ReactN
   )
 }
 
+type GroupBy = "Severity" | "Category" | "Status"
+
 interface InsightsPanelProps {
   onOpenAlertModal: (insight: Insight) => void
   onViewTraces: (insight: Insight) => void
 }
 
+const severityRank: Record<Insight["severity"], number> = { critical: 0, warning: 1, info: 2 }
+const stateRank: Record<Insight["state"], number> = { Recurred: 0, Open: 1, Resolved: 2 }
+
 export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelProps) {
   const [expanded, setExpanded] = useState<string[]>([insights[0].id])
+  const [groupBy, setGroupBy] = useState<GroupBy>("Severity")
 
   const toggle = (id: string) =>
     setExpanded((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
 
+  const ordered = [...insights].sort((a, b) => {
+    if (groupBy === "Category") return a.category.localeCompare(b.category)
+    if (groupBy === "Status") return stateRank[a.state] - stateRank[b.state]
+    return severityRank[a.severity] - severityRank[b.severity]
+  })
+
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex items-baseline gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-sm font-semibold text-foreground">Insights</h2>
         <span className="text-xs text-muted-foreground">Prioritized by impact</span>
+        <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          Group by
+          <select
+            value={groupBy}
+            onChange={(event) => setGroupBy(event.target.value as GroupBy)}
+            className="bg-secondary border border-border px-1.5 py-0.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50"
+          >
+            <option value="Severity">Severity</option>
+            <option value="Category">Category</option>
+            <option value="Status">Status</option>
+          </select>
+        </label>
       </div>
 
       <div className="flex flex-col gap-2">
-        {insights.map((insight) => {
+        {ordered.map((insight) => {
           const isOpen = expanded.includes(insight.id)
           const isResolved = insight.state === "Resolved"
 
@@ -82,6 +106,9 @@ export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelP
                   className={cn("w-2 h-2 rounded-full shrink-0", severityDot[insight.severity])}
                   aria-hidden="true"
                 />
+                <span className="px-1.5 py-0.5 text-[10px] uppercase tracking-wide bg-secondary border border-border text-muted-foreground shrink-0 whitespace-nowrap">
+                  {insight.category}
+                </span>
                 <span className="flex-1 text-[13px] font-medium text-foreground text-pretty">{insight.title}</span>
                 {insight.stateTooltip ? (
                   <Tooltip>

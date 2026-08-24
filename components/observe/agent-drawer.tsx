@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ExternalLink, X } from "lucide-react"
-import type { FleetAgent } from "@/lib/observe-data"
+import { hostingGibHours, hostingVcpuHours, type FleetAgent } from "@/lib/observe-data"
+import { Sparkline } from "./sparkline"
 
-const tabs = ["Traces", "Evaluations", "Deployments"] as const
+const tabs = ["Traces", "Evaluations", "Deployments", "Hosting"] as const
 
 interface AgentDrawerProps {
   agent: FleetAgent | null
@@ -144,6 +145,28 @@ export function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
                 </li>
               ))}
             </ul>
+          )}
+
+          {tab === "Hosting" && (
+            <div className="flex flex-col gap-2">
+              {[
+                { label: "vCPU hours", data: hostingVcpuHours, total: "22.4", unit: "vCPU-h / day" },
+                { label: "GiB hours", data: hostingGibHours, total: "74.1", unit: "GiB-h / day" },
+              ].map((metric) => (
+                <div key={metric.label} className="flex flex-col gap-1.5 px-2.5 py-2 bg-secondary/40 border border-border">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="flex-1 text-xs text-foreground/85">{metric.label}</span>
+                    <span className="text-xs tabular-nums text-foreground">{metric.total}</span>
+                    <span className="text-[10px] text-muted-foreground">{metric.unit}</span>
+                  </div>
+                  <Sparkline data={metric.data} tone="up" width={180} height={28} className="w-full" />
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Hosting cost $64/day across the project · this agent accounts for $18/day. Trending up over the
+                last 12 buckets.
+              </p>
+            </div>
           )}
         </div>
       </div>

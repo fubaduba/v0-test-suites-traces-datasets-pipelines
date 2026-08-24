@@ -248,9 +248,20 @@ export const fleetAgents: FleetAgent[] = [
 export type InsightSeverity = "critical" | "warning" | "info"
 export type InsightState = "Open" | "Resolved" | "Recurred"
 
+/** Mirrors the per-agent insight taxonomy so fleet and agent views stay consistent. */
+export type InsightCategory = "Output quality" | "Cost" | "Invocation failure" | "Latency"
+
+export const insightCategories: InsightCategory[] = [
+  "Output quality",
+  "Cost",
+  "Invocation failure",
+  "Latency",
+]
+
 export interface Insight {
   id: string
   severity: InsightSeverity
+  category: InsightCategory
   title: string
   state: InsightState
   stateTooltip?: string
@@ -271,6 +282,7 @@ export const insights: Insight[] = [
   {
     id: "insight-groundedness",
     severity: "critical",
+    category: "Output quality",
     title: "Groundedness regression across 3 agents sharing deployment gpt4o-prod-eastus2",
     state: "Open",
     affectedAgents: ["luffy-travel-approver-002", "faos-ado-memory-agent", "acrtest-py-bzip-20260717"],
@@ -289,6 +301,7 @@ export const insights: Insight[] = [
   {
     id: "insight-tokens",
     severity: "warning",
+    category: "Cost",
     title: "Token consumption anomaly: acrtest-net-img-20260717",
     state: "Open",
     affectedAgents: ["acrtest-net-img-20260717"],
@@ -306,6 +319,7 @@ export const insights: Insight[] = [
   {
     id: "insight-invocation",
     severity: "warning",
+    category: "Invocation failure",
     title: "Invocation failures before traces exist: faos-ado-memory-agent",
     state: "Recurred",
     stateTooltip: "Recurred Aug 24 · previously seen Aug 11 · 2 occurrences in 30d",
@@ -324,6 +338,7 @@ export const insights: Insight[] = [
   {
     id: "insight-latency",
     severity: "info",
+    category: "Latency",
     title: "P95 latency regression: math-prompt-agent",
     state: "Resolved",
     stateTooltip: "Resolved Aug 23 · re-evaluated · no recurrence in 24h",
@@ -352,6 +367,11 @@ export const readinessItems: ReadinessItem[] = [
   { id: "evals", label: "8 agents without evals", action: "Enable" },
   { id: "criteria", label: "9 agents without success criteria", action: "Define" },
   { id: "stale", label: "2 agents stale >24h", action: "Diagnose" },
+  {
+    id: "eval-failed",
+    label: "Scheduled eval failed: faos-ado-memory-agent — quality data stale",
+    action: "Diagnose",
+  },
 ]
 
 export interface FiredAlert {
@@ -381,6 +401,106 @@ export const firedAlerts: FiredAlert[] = [
     meta: "Fired 9h ago · Email",
   },
 ]
+
+/* ---------------------------------------------------------------------------
+ * Quality trends module (opens from the Quality trend KPI tile)
+ * ------------------------------------------------------------------------- */
+
+export type Evaluator = "Groundedness" | "Task adherence" | "Relevance" | "Safety"
+
+/** Only Groundedness is instrumented today; the rest render an honest empty state. */
+export const evaluators: { name: Evaluator; hasData: boolean }[] = [
+  { name: "Groundedness", hasData: true },
+  { name: "Task adherence", hasData: false },
+  { name: "Relevance", hasData: false },
+  { name: "Safety", hasData: false },
+]
+
+/** The four agents that actually have evaluations enabled. */
+export const qualitySeriesAgents = [
+  { key: "luffy", name: "luffy-travel-approver-002", color: "var(--chart-1)" },
+  { key: "faos", name: "faos-ado-memory-agent", color: "var(--chart-2)" },
+  { key: "bzip", name: "acrtest-py-bzip-20260717", color: "var(--chart-4)" },
+  { key: "math", name: "math-prompt-agent", color: "var(--chart-5)" },
+] as const
+
+export const qualityRegressionMarker = "Aug 22"
+export const qualityRegressionLabel = "gpt4o-prod-eastus2 updated"
+
+export interface QualityPoint {
+  day: string
+  luffy: number
+  faos: number
+  bzip: number
+  math: number
+}
+
+/** 14 days of groundedness. Three lines step down after the Aug 22 marker. */
+export const qualityTrendSeries: QualityPoint[] = [
+  { day: "Aug 11", luffy: 82, faos: 76, bzip: 86, math: 90 },
+  { day: "Aug 12", luffy: 82, faos: 77, bzip: 86, math: 90 },
+  { day: "Aug 13", luffy: 83, faos: 77, bzip: 85, math: 91 },
+  { day: "Aug 14", luffy: 83, faos: 77, bzip: 86, math: 91 },
+  { day: "Aug 15", luffy: 82, faos: 76, bzip: 86, math: 90 },
+  { day: "Aug 16", luffy: 82, faos: 76, bzip: 86, math: 90 },
+  { day: "Aug 17", luffy: 83, faos: 77, bzip: 86, math: 91 },
+  { day: "Aug 18", luffy: 83, faos: 77, bzip: 85, math: 91 },
+  { day: "Aug 19", luffy: 83, faos: 77, bzip: 86, math: 91 },
+  { day: "Aug 20", luffy: 82, faos: 76, bzip: 86, math: 90 },
+  { day: "Aug 21", luffy: 82, faos: 76, bzip: 86, math: 90 },
+  { day: "Aug 22", luffy: 78, faos: 72, bzip: 82, math: 91 },
+  { day: "Aug 23", luffy: 74, faos: 69, bzip: 80, math: 90 },
+  { day: "Aug 24", luffy: 73, faos: 67, bzip: 80, math: 91 },
+]
+
+/* ---------------------------------------------------------------------------
+ * Evaluations panel (right rail)
+ * ------------------------------------------------------------------------- */
+
+export interface EvaluationSetup {
+  id: string
+  agent: string
+  mode: string
+  lastRun: string
+  failed?: boolean
+}
+
+export const evaluationSummary = "Continuous: 4 agents · Scheduled: 2 agents · Fleet default: off"
+
+export const evaluationSetups: EvaluationSetup[] = [
+  {
+    id: "eval-luffy",
+    agent: "luffy-travel-approver-002",
+    mode: "Continuous · 10% sampling",
+    lastRun: "last run 14m ago",
+  },
+  {
+    id: "eval-faos",
+    agent: "faos-ado-memory-agent",
+    mode: "Scheduled daily",
+    lastRun: "last run FAILED Aug 23",
+    failed: true,
+  },
+  {
+    id: "eval-bzip",
+    agent: "acrtest-py-bzip-20260717",
+    mode: "Continuous · 10%",
+    lastRun: "last run 22m ago",
+  },
+  {
+    id: "eval-math",
+    agent: "math-prompt-agent",
+    mode: "Scheduled daily",
+    lastRun: "last run 6h ago",
+  },
+]
+
+/* ---------------------------------------------------------------------------
+ * Hosting (drawer tab) — vCPU / GiB hours, last 12 buckets
+ * ------------------------------------------------------------------------- */
+
+export const hostingVcpuHours = [12, 13, 12, 14, 15, 14, 16, 18, 17, 19, 21, 22]
+export const hostingGibHours = [48, 50, 49, 52, 55, 54, 58, 63, 61, 66, 71, 74]
 
 export const suggestedAlerts = [
   "Error rate spike",
