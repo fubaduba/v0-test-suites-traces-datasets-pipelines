@@ -4,11 +4,54 @@ export type AgentEnvironment = "prod" | "staging" | "dev"
 
 export const agentEnvironments: AgentEnvironment[] = ["prod", "staging", "dev"]
 
+export type AttentionFactorKey = "regressions" | "errors" | "cost" | "capacity"
+
+/**
+ * The attention model. Weights are fixed across the fleet and sum to 1 — only
+ * the per-agent inputs vary. Exported so the UI can show the weight next to
+ * each factor rather than presenting an unexplained composite.
+ */
+export const attentionFactorMeta: { key: AttentionFactorKey; label: string; weight: number }[] = [
+  { key: "regressions", label: "Active regressions", weight: 0.4 },
+  { key: "errors", label: "Error contribution", weight: 0.3 },
+  { key: "cost", label: "Cost outlier", weight: 0.15 },
+  { key: "capacity", label: "Capacity risk", weight: 0.15 },
+]
+
+export interface AttentionFactor {
+  /** 0-100 severity for this factor alone. */
+  score: number
+  /** The measured value behind the score, in human terms. */
+  value: string
+}
+
+export type AttentionFactors = Record<AttentionFactorKey, AttentionFactor>
+
+/**
+ * The composite is always computed from the factors, never stored, so the score
+ * in the table and the breakdown in the hover card can never disagree.
+ * `null` factors mean no telemetry — the agent is unscored, not scored zero.
+ */
+export function computeAttention(factors: AttentionFactors | null): number | null {
+  if (!factors) return null
+  return Math.round(
+    attentionFactorMeta.reduce((total, factor) => total + factor.weight * factors[factor.key].score, 0),
+  )
+}
+
+/** Weighted points a single factor contributes to the composite. */
+export function factorContribution(factors: AttentionFactors, key: AttentionFactorKey): number {
+  const meta = attentionFactorMeta.find((item) => item.key === key)
+  return meta ? meta.weight * factors[key].score : 0
+}
+
 export interface FleetAgent {
   id: string
   name: string
   status: AgentStatus
-  attention: number // 0-100 rank score
+  /** Derived from attentionFactors. `null` when the agent has no telemetry. */
+  attention: number | null
+  attentionFactors: AttentionFactors | null
   attentionWhy: string
   environment: AgentEnvironment
   tags: string[]
@@ -28,12 +71,17 @@ export interface FleetAgent {
   drawerContext: string
 }
 
-export const fleetAgents: FleetAgent[] = [
+const rawAgents: Omit<FleetAgent, "attention">[] = [
   {
     id: "luffy-travel-approver-002",
     name: "luffy-travel-approver-002",
     status: "critical",
-    attention: 96,
+    attentionFactors: {
+      regressions: { score: 100, value: "Groundedness −9.1 pts over 7 days · 3 evals failing" },
+      errors: { score: 95, value: "4.9% error rate · 2,362 failed runs" },
+      cost: { score: 100, value: "$156.40 · 38% of fleet spend" },
+      capacity: { score: 85, value: "gpt4o-prod-eastus2 at 92% of TPM quota" },
+    },
     attentionWhy: "Groundedness −9 pts · 38% of fleet cost · shared deployment gpt4o-prod-eastus2",
     environment: "prod",
     tags: ["travel", "approvals", "gpt-4o"],
@@ -56,7 +104,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "faos-ado-memory-agent",
     name: "faos-ado-memory-agent",
     status: "attention",
-    attention: 88,
+    attentionFactors: {
+      regressions: { score: 90, value: "Groundedness −7.4 pts over 7 days · 2 evals failing" },
+      errors: { score: 100, value: "6.2% error rate · 22 runs failed before spans emitted" },
+      cost: { score: 70, value: "$61.20 · 15% of fleet spend" },
+      capacity: { score: 75, value: "auth retry loop consuming 3.1× baseline quota" },
+    },
     attentionWhy: "22 invocations failed before spans emitted · recurring auth misconfiguration",
     environment: "prod",
     tags: ["ado", "memory"],
@@ -79,7 +132,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-py-bzip-20260717",
     name: "acrtest-py-bzip-20260717",
     status: "attention",
-    attention: 74,
+    attentionFactors: {
+      regressions: { score: 90, value: "Groundedness −6.0 pts over 7 days · 1 eval failing" },
+      errors: { score: 65, value: "2.8% error rate · 242 failed runs" },
+      cost: { score: 62, value: "$38.90 · 9% of fleet spend" },
+      capacity: { score: 60, value: "shares gpt4o-prod-eastus2 at 92% of TPM quota" },
+    },
     attentionWhy: "Groundedness −6 pts · shares deployment gpt4o-prod-eastus2",
     environment: "staging",
     tags: ["acrtest", "python"],
@@ -103,7 +161,12 @@ export const fleetAgents: FleetAgent[] = [
     name: "acrtest-net-img-20260717",
     status: "attention",
     // token anomaly — see insight-tokens
-    attention: 69,
+    attentionFactors: {
+      regressions: { score: 58, value: "Quality flat (−0.8 pts) · no evals configured" },
+      errors: { score: 54, value: "1.9% error rate · 116 failed runs" },
+      cost: { score: 100, value: "$84.70 · tokens/run 4.1× baseline since v12" },
+      capacity: { score: 100, value: "tool retry loop · P95 5.31s against 6s timeout" },
+    },
     attentionWhy: "Tokens/run 4.1× baseline since v12 · +$61/day",
     environment: "staging",
     tags: ["acrtest", "dotnet"],
@@ -126,7 +189,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "math-prompt-agent",
     name: "math-prompt-agent",
     status: "healthy",
-    attention: 31,
+    attentionFactors: {
+      regressions: { score: 23, value: "Quality +3.9 pts · latency regression resolved Aug 23" },
+      errors: { score: 19, value: "0.7% error rate · 107 failed runs" },
+      cost: { score: 38, value: "$21.40 · 5% of fleet spend" },
+      capacity: { score: 66, value: "highest invocation volume in fleet (15,330 runs)" },
+    },
     attentionWhy: "P95 latency regression resolved Aug 23 after prompt rollback",
     environment: "prod",
     tags: ["math", "prompt"],
@@ -149,7 +217,8 @@ export const fleetAgents: FleetAgent[] = [
     id: "testprompt727",
     name: "testprompt727",
     status: "unmonitored",
-    attention: 0,
+    // No telemetry: unscored rather than scored zero.
+    attentionFactors: null,
     attentionWhy: "No signal — tracing not configured",
     environment: "dev",
     tags: ["sandbox"],
@@ -171,7 +240,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-py-img-20260717",
     name: "acrtest-py-img-20260717",
     status: "healthy",
-    attention: 41,
+    attentionFactors: {
+      regressions: { score: 47, value: "Quality −3.2 pts · no evals configured to confirm" },
+      errors: { score: 32, value: "1.4% error rate · 62 failed runs" },
+      cost: { score: 32, value: "$12.80 · 3% of fleet spend" },
+      capacity: { score: 55, value: "P95 2.89s · within deployment headroom" },
+    },
     attentionWhy: "Error rate within baseline · no evals configured",
     environment: "staging",
     tags: ["acrtest", "python"],
@@ -194,7 +268,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-py-rbzip-20260717",
     name: "acrtest-py-rbzip-20260717",
     status: "healthy",
-    attention: 22,
+    attentionFactors: {
+      regressions: { score: 20, value: "Quality +0.6 pts · no active regression" },
+      errors: { score: 18, value: "0.9% error rate · 29 failed runs" },
+      cost: { score: 25, value: "$9.60 · 2% of fleet spend" },
+      capacity: { score: 30, value: "P95 1.52s · within deployment headroom" },
+    },
     attentionWhy: "Stable across all monitored signals",
     environment: "staging",
     tags: ["acrtest", "python"],
@@ -216,7 +295,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-net-bzip-20260717",
     name: "acrtest-net-bzip-20260717",
     status: "healthy",
-    attention: 18,
+    attentionFactors: {
+      regressions: { score: 16, value: "Quality +1.1 pts · no active regression" },
+      errors: { score: 14, value: "0.6% error rate · 17 failed runs" },
+      cost: { score: 20, value: "$8.20 · 2% of fleet spend" },
+      capacity: { score: 26, value: "P95 1.34s · within deployment headroom" },
+    },
     attentionWhy: "Stable across all monitored signals",
     environment: "staging",
     tags: ["acrtest", "dotnet"],
@@ -238,7 +322,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-net-rbzip-20260717",
     name: "acrtest-net-rbzip-20260717",
     status: "healthy",
-    attention: 14,
+    attentionFactors: {
+      regressions: { score: 12, value: "Quality +0.9 pts · no active regression" },
+      errors: { score: 11, value: "0.5% error rate · 10 failed runs" },
+      cost: { score: 16, value: "$6.40 · 1% of fleet spend" },
+      capacity: { score: 20, value: "P95 1.21s · within deployment headroom" },
+    },
     attentionWhy: "Stable across all monitored signals",
     environment: "staging",
     tags: ["acrtest", "dotnet"],
@@ -260,7 +349,8 @@ export const fleetAgents: FleetAgent[] = [
     id: "acrtest-py-bzip-depmiss-20260717",
     name: "acrtest-py-bzip-depmiss-20260717",
     status: "unmonitored",
-    attention: 0,
+    // Telemetry stale: unscored rather than scored zero.
+    attentionFactors: null,
     attentionWhy: "Telemetry stale — last span 31h ago",
     environment: "dev",
     tags: ["acrtest", "python"],
@@ -282,7 +372,12 @@ export const fleetAgents: FleetAgent[] = [
     id: "faos-ado-skills-agent",
     name: "faos-ado-skills-agent",
     status: "healthy",
-    attention: 11,
+    attentionFactors: {
+      regressions: { score: 10, value: "Quality +1.4 pts · no active regression" },
+      errors: { score: 9, value: "0.4% error rate · 23 failed runs" },
+      cost: { score: 14, value: "$11.30 · 3% of fleet spend" },
+      capacity: { score: 16, value: "P95 1.49s · within deployment headroom" },
+    },
     attentionWhy: "Stable across all monitored signals",
     environment: "prod",
     tags: ["ado", "skills"],
@@ -301,6 +396,11 @@ export const fleetAgents: FleetAgent[] = [
     drawerContext: "Opens agent Monitor tab with context: timeframe 24h · no active findings",
   },
 ]
+
+export const fleetAgents: FleetAgent[] = rawAgents.map((agent) => ({
+  ...agent,
+  attention: computeAttention(agent.attentionFactors),
+}))
 
 export interface FleetMetric {
   value: number

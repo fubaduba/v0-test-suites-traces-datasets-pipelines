@@ -9,7 +9,7 @@ import { QualityPanel } from "@/components/observe/quality-panel"
 import { InsightsPanel } from "@/components/observe/insights-panel"
 import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
-import { AgentDrawer } from "@/components/observe/agent-drawer"
+import { AgentDrawer, type DrawerTab } from "@/components/observe/agent-drawer"
 import { CreateAlertModal } from "@/components/observe/create-alert-modal"
 import { fleetAgents, type FleetAgent, type Insight } from "@/lib/observe-data"
 
@@ -22,7 +22,14 @@ export function ObserveView() {
   const [railOpen, setRailOpen] = useState(false)
   const [highlightReadiness, setHighlightReadiness] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>("Traces")
   const [alertInsight, setAlertInsight] = useState<Insight | null>(null)
+
+  // Entry points can request a specific drawer tab (e.g. the attention score).
+  const openAgent = (agent: FleetAgent, tab: DrawerTab = "Traces") => {
+    setDrawerTab(tab)
+    setSelectedAgent(agent)
+  }
 
   // Quality trends and Insights are both collapsed by default.
   const [qualityOpen, setQualityOpen] = useState(false)
@@ -128,7 +135,7 @@ export function ObserveView() {
               <AgentTable
                 filter={filter}
                 onFilterChange={setFilter}
-                onSelectAgent={setSelectedAgent}
+                onSelectAgent={openAgent}
                 timeframe={timeframe}
                 onTimeframeChange={setTimeframe}
               />
@@ -152,7 +159,7 @@ export function ObserveView() {
                 onOpenAlertModal={setAlertInsight}
                 onViewTraces={(insight) => {
                   const agent = fleetAgents.find((item) => item.name === insight.affectedAgents[0])
-                  if (agent) setSelectedAgent(agent)
+                  if (agent) openAgent(agent, "Traces")
                 }}
               />
             </div>
@@ -171,7 +178,7 @@ export function ObserveView() {
           </>
         )}
 
-        <AgentDrawer agent={selectedAgent} onClose={() => setSelectedAgent(null)} />
+        <AgentDrawer agent={selectedAgent} initialTab={drawerTab} onClose={() => setSelectedAgent(null)} />
         <CreateAlertModal insight={alertInsight} onClose={() => setAlertInsight(null)} />
       </div>
     </TooltipProvider>

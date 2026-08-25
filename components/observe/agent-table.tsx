@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
-import { HelpCircle, Search } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Info, Search } from "lucide-react"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Sparkline } from "./sparkline"
+import { AttentionBreakdown, AttentionUnscored } from "./attention-breakdown"
+import type { DrawerTab } from "./agent-drawer"
 import {
   agentEnvironments,
   fleetAgents,
@@ -98,7 +100,7 @@ function CoverageBadges({ coverage }: { coverage: FleetAgent["coverage"] }) {
 interface AgentTableProps {
   filter: FilterId
   onFilterChange: (filter: FilterId) => void
-  onSelectAgent: (agent: FleetAgent) => void
+  onSelectAgent: (agent: FleetAgent, tab?: DrawerTab) => void
   timeframe: Timeframe
   onTimeframeChange: (timeframe: Timeframe) => void
 }
@@ -125,7 +127,8 @@ export function AgentTable({
       .filter((agent) => environment === "all" || agent.environment === environment)
       .filter((agent) => tag === "all" || agent.tags.includes(tag))
       .filter((agent) => agent.name.toLowerCase().includes(query.toLowerCase()))
-      .sort((a, b) => b.attention - a.attention)
+      // Unscored agents (no telemetry) sort last rather than mixing in at zero.
+      .sort((a, b) => (b.attention ?? -1) - (a.attention ?? -1))
   }, [filter, query, environment, tag])
 
   return (
@@ -232,36 +235,58 @@ export function AgentTable({
                     </span>
                   </td>
                   <td className="px-3 py-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-16 h-1.5 bg-secondary">
-                        <span
-                          className={cn(
-                            "block h-1.5",
-                            agent.attention >= 80
-                              ? "bg-danger"
-                              : agent.attention >= 50
-                                ? "bg-warning"
-                                : "bg-muted-foreground/60",
-                          )}
-                          style={{ width: `${agent.attention}%` }}
-                        />
-                      </span>
-                      <span className="text-xs tabular-nums text-muted-foreground w-6">{agent.attention}</span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            aria-label={`Why ${agent.name} is ranked here`}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-xs text-xs">
-                          {agent.attentionWhy}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
+                    <HoverCard openDelay={120} closeDelay={80}>
+                      <HoverCardTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={`Attention score breakdown for ${agent.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onSelectAgent(agent, "Attention")
+                          }}
+                          className="flex items-center gap-1.5 text-left group/attn"
+                        >
+                          <span className="w-16 h-1.5 bg-secondary shrink-0" aria-hidden="true">
+                            {agent.attention !== null && (
+                              <span
+                                className={cn(
+                                  "block h-1.5",
+                                  agent.attention >= 80
+                                    ? "bg-danger"
+                                    : agent.attention >= 50
+                                      ? "bg-warning"
+                                      : "bg-muted-foreground/60",
+                                )}
+                                style={{ width: `${agent.attention}%` }}
+                              />
+                            )}
+                          </span>
+                          <span className="w-6 text-xs tabular-nums text-muted-foreground group-hover/attn:text-foreground">
+                            {agent.attention ?? "—"}
+                          </span>
+                          <Info className="w-3 h-3 text-muted-foreground/70 group-hover/attn:text-foreground" />
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent side="right" align="start" className="w-80 flex flex-col gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-semibold text-foreground">Attention score</span>
+                          <span className="text-[11px] text-muted-foreground text-pretty">
+                            {agent.attentionWhy}
+                          </span>
+                        </div>
+                        {agent.attentionFactors ? (
+                          <AttentionBreakdown
+                            factors={agent.attentionFactors}
+                            total={agent.attention as number}
+                          />
+                        ) : (
+                          <AttentionUnscored />
+                        )}
+                        <span className="text-[10px] text-muted-foreground">
+                          Click to open the full breakdown
+                        </span>
+                      </HoverCardContent>
+                    </HoverCard>
                   </td>
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
                     {agent.invocations.toLocaleString()}

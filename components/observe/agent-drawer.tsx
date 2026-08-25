@@ -5,16 +5,26 @@ import { cn } from "@/lib/utils"
 import { ExternalLink, X } from "lucide-react"
 import { hostingGibHours, hostingVcpuHours, type FleetAgent } from "@/lib/observe-data"
 import { Sparkline } from "./sparkline"
+import { AttentionBreakdown, AttentionUnscored } from "./attention-breakdown"
 
-const tabs = ["Traces", "Evaluations", "Deployments", "Hosting"] as const
+const tabs = ["Attention", "Traces", "Evaluations", "Deployments", "Hosting"] as const
+
+export type DrawerTab = (typeof tabs)[number]
 
 interface AgentDrawerProps {
   agent: FleetAgent | null
   onClose: () => void
+  /** Which tab to show when the drawer opens. */
+  initialTab?: DrawerTab
 }
 
-export function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
-  const [tab, setTab] = useState<(typeof tabs)[number]>("Traces")
+export function AgentDrawer({ agent, onClose, initialTab = "Traces" }: AgentDrawerProps) {
+  const [tab, setTab] = useState<DrawerTab>(initialTab)
+
+  // Re-sync when the drawer is opened from a different entry point.
+  useEffect(() => {
+    if (agent) setTab(initialTab)
+  }, [agent, initialTab])
 
   useEffect(() => {
     if (!agent) return
@@ -78,6 +88,38 @@ export function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
         </nav>
 
         <div className="flex-1 overflow-y-auto p-4">
+          {tab === "Attention" && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-semibold tabular-nums text-foreground leading-none">
+                  {agent.attention ?? "—"}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {agent.attention === null ? "not scored" : "of 100 · rank score"}
+                </span>
+              </div>
+
+              {agent.attentionFactors ? (
+                <>
+                  <AttentionBreakdown
+                    factors={agent.attentionFactors}
+                    total={agent.attention as number}
+                    className="px-2.5 py-2.5 bg-secondary/40 border border-border"
+                  />
+                  <p className="text-[11px] leading-relaxed text-muted-foreground text-pretty">
+                    Each factor is scored 0–100 from its own signal, multiplied by a fixed fleet-wide weight,
+                    then summed. Weights are identical for every agent, so scores are comparable across the
+                    fleet; only the inputs differ.
+                  </p>
+                </>
+              ) : (
+                <div className="px-2.5 py-2.5 bg-secondary/40 border border-border">
+                  <AttentionUnscored reason={agent.attentionWhy} />
+                </div>
+              )}
+            </div>
+          )}
+
           {tab === "Traces" && (
             <ul className="flex flex-col gap-1.5">
               {[
