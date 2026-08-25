@@ -1,16 +1,25 @@
 export type AgentStatus = "healthy" | "attention" | "critical" | "unmonitored"
 
+export type AgentEnvironment = "prod" | "staging" | "dev"
+
+export const agentEnvironments: AgentEnvironment[] = ["prod", "staging", "dev"]
+
 export interface FleetAgent {
   id: string
   name: string
   status: AgentStatus
   attention: number // 0-100 rank score
   attentionWhy: string
+  environment: AgentEnvironment
+  tags: string[]
   invocations: number
+  sessions: number
   errorRate: number | null
   taskCompletion: number | null
   qualityTrend: number[]
   qualityDelta: number | null
+  // Cold start in ms. 0 means no telemetry, rendered as an em dash like p95.
+  coldStart: number
   p95: number
   cost: number
   lastDeployment: string
@@ -26,11 +35,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "critical",
     attention: 96,
     attentionWhy: "Groundedness −9 pts · 38% of fleet cost · shared deployment gpt4o-prod-eastus2",
+    environment: "prod",
+    tags: ["travel", "approvals", "gpt-4o"],
     invocations: 48210,
+    sessions: 16070,
     errorRate: 4.9,
     taskCompletion: 71.4,
     qualityTrend: [82, 81, 80, 78, 74, 71, 69],
     qualityDelta: -9.1,
+    coldStart: 890,
     p95: 4820,
     cost: 156.4,
     lastDeployment: "Aug 22, 14:10",
@@ -45,11 +58,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "attention",
     attention: 88,
     attentionWhy: "22 invocations failed before spans emitted · recurring auth misconfiguration",
+    environment: "prod",
+    tags: ["ado", "memory"],
     invocations: 12904,
+    sessions: 4301,
     errorRate: 6.2,
     taskCompletion: 64.8,
     qualityTrend: [78, 77, 76, 74, 70, 68, 67],
     qualityDelta: -7.4,
+    coldStart: 1240,
     p95: 3910,
     cost: 61.2,
     lastDeployment: "Aug 21, 09:02",
@@ -64,11 +81,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "attention",
     attention: 74,
     attentionWhy: "Groundedness −6 pts · shares deployment gpt4o-prod-eastus2",
+    environment: "staging",
+    tags: ["acrtest", "python"],
     invocations: 8640,
+    sessions: 2880,
     errorRate: 2.8,
     taskCompletion: 80.2,
     qualityTrend: [86, 85, 85, 83, 81, 80, 80],
     qualityDelta: -6.0,
+    coldStart: 620,
     p95: 2240,
     cost: 38.9,
     lastDeployment: "Aug 22, 14:10",
@@ -84,11 +105,15 @@ export const fleetAgents: FleetAgent[] = [
     // token anomaly — see insight-tokens
     attention: 69,
     attentionWhy: "Tokens/run 4.1× baseline since v12 · +$61/day",
+    environment: "staging",
+    tags: ["acrtest", "dotnet"],
     invocations: 6120,
+    sessions: 2040,
     errorRate: 1.9,
     taskCompletion: null,
     qualityTrend: [74, 74, 75, 75, 74, 74, 73],
     qualityDelta: -0.8,
+    coldStart: 1580,
     p95: 5310,
     cost: 84.7,
     lastDeployment: "Aug 23, 18:44",
@@ -103,11 +128,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 31,
     attentionWhy: "P95 latency regression resolved Aug 23 after prompt rollback",
+    environment: "prod",
+    tags: ["math", "prompt"],
     invocations: 15330,
+    sessions: 5110,
     errorRate: 0.7,
     taskCompletion: 92.6,
     qualityTrend: [88, 86, 83, 82, 88, 91, 92],
     qualityDelta: 3.9,
+    coldStart: 310,
     p95: 1180,
     cost: 21.4,
     lastDeployment: "Aug 23, 07:15",
@@ -122,11 +151,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "unmonitored",
     attention: 0,
     attentionWhy: "No signal — tracing not configured",
+    environment: "dev",
+    tags: ["sandbox"],
     invocations: 0,
+    sessions: 0,
     errorRate: null,
     taskCompletion: null,
     qualityTrend: [],
     qualityDelta: null,
+    coldStart: 0,
     p95: 0,
     cost: 0,
     lastDeployment: "Aug 12, 11:30",
@@ -140,11 +173,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 41,
     attentionWhy: "Error rate within baseline · no evals configured",
+    environment: "staging",
+    tags: ["acrtest", "python"],
     invocations: 4410,
+    sessions: 1470,
     errorRate: 1.4,
     taskCompletion: null,
     qualityTrend: [80, 79, 79, 78, 77, 77, 76],
     qualityDelta: -3.2,
+    coldStart: 740,
     p95: 2890,
     cost: 12.8,
     lastDeployment: "Aug 20, 16:02",
@@ -159,11 +196,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 22,
     attentionWhy: "Stable across all monitored signals",
+    environment: "staging",
+    tags: ["acrtest", "python"],
     invocations: 3220,
+    sessions: 1073,
     errorRate: 0.9,
     taskCompletion: null,
     qualityTrend: [84, 84, 85, 85, 84, 85, 85],
     qualityDelta: 0.6,
+    coldStart: 450,
     p95: 1520,
     cost: 9.6,
     lastDeployment: "Aug 19, 10:41",
@@ -177,11 +218,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 18,
     attentionWhy: "Stable across all monitored signals",
+    environment: "staging",
+    tags: ["acrtest", "dotnet"],
     invocations: 2870,
+    sessions: 957,
     errorRate: 0.6,
     taskCompletion: null,
     qualityTrend: [83, 83, 84, 84, 84, 84, 85],
     qualityDelta: 1.1,
+    coldStart: 420,
     p95: 1340,
     cost: 8.2,
     lastDeployment: "Aug 18, 13:20",
@@ -195,11 +240,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 14,
     attentionWhy: "Stable across all monitored signals",
+    environment: "staging",
+    tags: ["acrtest", "dotnet"],
     invocations: 1940,
+    sessions: 647,
     errorRate: 0.5,
     taskCompletion: null,
     qualityTrend: [85, 85, 85, 86, 86, 86, 86],
     qualityDelta: 0.9,
+    coldStart: 390,
     p95: 1210,
     cost: 6.4,
     lastDeployment: "Aug 18, 13:20",
@@ -213,11 +262,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "unmonitored",
     attention: 0,
     attentionWhy: "Telemetry stale — last span 31h ago",
+    environment: "dev",
+    tags: ["acrtest", "python"],
     invocations: 210,
+    sessions: 70,
     errorRate: null,
     taskCompletion: null,
     qualityTrend: [],
     qualityDelta: null,
+    coldStart: 0,
     p95: 0,
     cost: 1.1,
     lastDeployment: "Aug 15, 08:55",
@@ -231,11 +284,15 @@ export const fleetAgents: FleetAgent[] = [
     status: "healthy",
     attention: 11,
     attentionWhy: "Stable across all monitored signals",
+    environment: "prod",
+    tags: ["ado", "skills"],
     invocations: 5680,
+    sessions: 1893,
     errorRate: 0.4,
     taskCompletion: 89.1,
     qualityTrend: [87, 87, 88, 88, 88, 89, 89],
     qualityDelta: 1.4,
+    coldStart: 480,
     p95: 1490,
     cost: 11.3,
     lastDeployment: "Aug 21, 09:02",
@@ -250,15 +307,17 @@ export interface FleetMetric {
   deltaPct: number
 }
 
-// Fleet-wide volume. Invocations are summed from the table so the tile and the
-// agent rows can never disagree. Sessions are stored explicitly because they
-// are not tracked per agent.
+// Fleet-wide volume. Both totals are summed from the agent rows so the KPI
+// tile and the table can never disagree.
 export const fleetVolume: { invocations: FleetMetric; sessions: FleetMetric } = {
   invocations: {
     value: fleetAgents.reduce((total, agent) => total + agent.invocations, 0),
     deltaPct: 12.4,
   },
-  sessions: { value: 38420, deltaPct: 8.1 },
+  sessions: {
+    value: fleetAgents.reduce((total, agent) => total + agent.sessions, 0),
+    deltaPct: 8.1,
+  },
 }
 
 // End-to-end duration across the fleet. Stored as explicit fleet-level figures

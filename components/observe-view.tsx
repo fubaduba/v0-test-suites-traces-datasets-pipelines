@@ -125,7 +125,13 @@ export function ObserveView() {
 
             {/* Layer 2 — agent table sits above the quality and insights modules */}
             <div ref={tableRef} className="scroll-mt-4">
-              <AgentTable filter={filter} onFilterChange={setFilter} onSelectAgent={setSelectedAgent} />
+              <AgentTable
+                filter={filter}
+                onFilterChange={setFilter}
+                onSelectAgent={setSelectedAgent}
+                timeframe={timeframe}
+                onTimeframeChange={setTimeframe}
+              />
             </div>
 
             {/* Quality module — expands from the Quality trend tile */}

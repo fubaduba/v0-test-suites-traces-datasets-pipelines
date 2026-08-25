@@ -5,7 +5,54 @@ import { cn } from "@/lib/utils"
 import { HelpCircle, Search } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sparkline } from "./sparkline"
-import { fleetAgents, type AgentStatus, type FleetAgent } from "@/lib/observe-data"
+import {
+  agentEnvironments,
+  fleetAgents,
+  type AgentEnvironment,
+  type AgentStatus,
+  type FleetAgent,
+} from "@/lib/observe-data"
+
+// Timeframe options mirror the page header toggle, which owns the state.
+const timeframeOptions = ["1h", "24h", "7d", "30d"] as const
+export type Timeframe = (typeof timeframeOptions)[number]
+
+// Every tag present across the fleet, for the tag filter options.
+const allTags = Array.from(new Set(fleetAgents.flatMap((agent) => agent.tags))).sort()
+
+/** Compact labelled <select> used by the environment, tag, and timeframe filters. */
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+  includeAll = true,
+}: {
+  label: string
+  value: string
+  options: readonly string[]
+  onChange: (value: string) => void
+  /** Timeframe is always one concrete window, so it opts out of the "All" option. */
+  includeAll?: boolean
+}) {
+  return (
+    <label className="flex items-center gap-1 text-[11px] text-muted-foreground">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="bg-secondary border border-border px-1.5 py-0.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50"
+      >
+        {includeAll && <option value="all">All</option>}
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
 
 const filters = [
   { id: "all", label: "All" },
@@ -52,10 +99,20 @@ interface AgentTableProps {
   filter: FilterId
   onFilterChange: (filter: FilterId) => void
   onSelectAgent: (agent: FleetAgent) => void
+  timeframe: Timeframe
+  onTimeframeChange: (timeframe: Timeframe) => void
 }
 
-export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTableProps) {
+export function AgentTable({
+  filter,
+  onFilterChange,
+  onSelectAgent,
+  timeframe,
+  onTimeframeChange,
+}: AgentTableProps) {
   const [query, setQuery] = useState("")
+  const [environment, setEnvironment] = useState<AgentEnvironment | "all">("all")
+  const [tag, setTag] = useState<string>("all")
 
   const rows = useMemo(() => {
     return fleetAgents
@@ -65,9 +122,11 @@ export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTable
         if (filter === "unmonitored") return agent.status === "unmonitored"
         return true
       })
+      .filter((agent) => environment === "all" || agent.environment === environment)
+      .filter((agent) => tag === "all" || agent.tags.includes(tag))
       .filter((agent) => agent.name.toLowerCase().includes(query.toLowerCase()))
       .sort((a, b) => b.attention - a.attention)
-  }, [filter, query])
+  }, [filter, query, environment, tag])
 
   return (
     <section className="flex flex-col gap-2">
@@ -93,29 +152,43 @@ export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTable
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-input border border-border">
-          <Search className="w-3.5 h-3.5 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search agents"
-            aria-label="Search agents"
-            className="w-40 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterSelect
+            label="Timeframe"
+            value={timeframe}
+            options={timeframeOptions}
+            onChange={(value) => onTimeframeChange(value as Timeframe)}
+            includeAll={false}
           />
+          <FilterSelect label="Env" value={environment} options={agentEnvironments} onChange={(value) => setEnvironment(value as AgentEnvironment | "all")} />
+          <FilterSelect label="Tag" value={tag} options={allTags} onChange={setTag} />
+
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-input border border-border">
+            <Search className="w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search agents"
+              aria-label="Search agents"
+              className="w-32 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+            />
+          </div>
         </div>
       </div>
 
       <div className="border border-border bg-card overflow-x-auto">
-        <table className="w-full min-w-[1180px] border-collapse">
+        <table className="w-full min-w-[1400px] border-collapse">
           <thead>
             <tr className="bg-secondary/60 text-[11px] uppercase tracking-wide text-muted-foreground">
               <th className="text-left font-medium px-3 py-2">Agent</th>
               <th className="text-left font-medium px-3 py-2">Status</th>
               <th className="text-left font-medium px-3 py-2">Attention</th>
               <th className="text-right font-medium px-3 py-2">Invocations</th>
+              <th className="text-right font-medium px-3 py-2">Sessions</th>
               <th className="text-right font-medium px-3 py-2">Error rate</th>
               <th className="text-right font-medium px-3 py-2">Task completion</th>
               <th className="text-left font-medium px-3 py-2">Quality trend</th>
+              <th className="text-right font-medium px-3 py-2">Cold start</th>
               <th className="text-right font-medium px-3 py-2">P95</th>
               <th className="text-right font-medium px-3 py-2">Cost</th>
               <th className="text-left font-medium px-3 py-2">Last deployment</th>
@@ -193,6 +266,9 @@ export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTable
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
                     {agent.invocations.toLocaleString()}
                   </td>
+                  <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
+                    {agent.sessions.toLocaleString()}
+                  </td>
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums">
                     {agent.errorRate === null ? (
                       <span className="text-muted-foreground/60">—</span>
@@ -235,6 +311,13 @@ export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTable
                     </div>
                   </td>
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
+                    {agent.coldStart ? (
+                      `${agent.coldStart.toLocaleString()}ms`
+                    ) : (
+                      <span className="text-muted-foreground/60">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
                     {agent.p95 ? `${(agent.p95 / 1000).toFixed(2)}s` : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
@@ -252,7 +335,7 @@ export function AgentTable({ filter, onFilterChange, onSelectAgent }: AgentTable
             })}
             {rows.length === 0 && (
               <tr className="border-t border-border">
-                <td colSpan={11} className="px-3 py-6 text-center text-xs text-muted-foreground">
+                <td colSpan={13} className="px-3 py-6 text-center text-xs text-muted-foreground">
                   No agents match this filter.
                 </td>
               </tr>
