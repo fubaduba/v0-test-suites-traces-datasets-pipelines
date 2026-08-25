@@ -38,6 +38,8 @@ function DetailRow({ label, value, muted }: { label: string; value: React.ReactN
 type GroupBy = "Severity" | "Category" | "Status"
 
 interface InsightsPanelProps {
+  open: boolean
+  onToggle: () => void
   onOpenAlertModal: (insight: Insight) => void
   onViewTraces: (insight: Insight) => void
 }
@@ -45,7 +47,7 @@ interface InsightsPanelProps {
 const severityRank: Record<Insight["severity"], number> = { critical: 0, warning: 1, info: 2 }
 const stateRank: Record<Insight["state"], number> = { Recurred: 0, Open: 1, Resolved: 2 }
 
-export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelProps) {
+export function InsightsPanel({ open, onToggle, onOpenAlertModal, onViewTraces }: InsightsPanelProps) {
   const [expanded, setExpanded] = useState<string[]>([insights[0].id])
   const [groupBy, setGroupBy] = useState<GroupBy>("Severity")
 
@@ -58,26 +60,47 @@ export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelP
     return severityRank[a.severity] - severityRank[b.severity]
   })
 
+  const openCount = insights.filter((insight) => insight.state !== "Resolved").length
+
   return (
     <section className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Insights</h2>
-        <span className="text-xs text-muted-foreground">Prioritized by impact</span>
-        <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          Group by
-          <select
-            value={groupBy}
-            onChange={(event) => setGroupBy(event.target.value as GroupBy)}
-            className="bg-secondary border border-border px-1.5 py-0.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50"
-          >
-            <option value="Severity">Severity</option>
-            <option value="Category">Category</option>
-            <option value="Status">Status</option>
-          </select>
-        </label>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex flex-1 items-center gap-2 text-left min-w-0"
+        >
+          {open ? (
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          )}
+          <span className="text-sm font-semibold text-foreground shrink-0">Insights</span>
+          {openCount > 0 && (
+            <span className="px-1.5 py-0.5 text-[10px] bg-primary/15 border border-primary/30 text-primary shrink-0">
+              {openCount} open
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground truncate">Prioritized by impact</span>
+        </button>
+        {open && (
+          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground shrink-0">
+            Group by
+            <select
+              value={groupBy}
+              onChange={(event) => setGroupBy(event.target.value as GroupBy)}
+              className="bg-secondary border border-border px-1.5 py-0.5 text-[11px] text-foreground focus:outline-none focus:border-primary/50"
+            >
+              <option value="Severity">Severity</option>
+              <option value="Category">Category</option>
+              <option value="Status">Status</option>
+            </select>
+          </label>
+        )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className={cn("flex flex-col gap-2", !open && "hidden")}>
         {ordered.map((insight) => {
           const isOpen = expanded.includes(insight.id)
           const isResolved = insight.state === "Resolved"

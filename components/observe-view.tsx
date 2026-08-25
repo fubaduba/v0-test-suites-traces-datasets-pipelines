@@ -24,7 +24,9 @@ export function ObserveView() {
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
   const [alertInsight, setAlertInsight] = useState<Insight | null>(null)
 
+  // Quality trends and Insights are both collapsed by default.
   const [qualityOpen, setQualityOpen] = useState(false)
+  const [insightsOpen, setInsightsOpen] = useState(false)
 
   const insightsRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLDivElement>(null)
@@ -49,6 +51,12 @@ export function ObserveView() {
     setQualityOpen(true)
     // Let the panel mount before scrolling it into view.
     window.requestAnimationFrame(() => scrollTo(qualityRef))
+  }
+
+  // Insights is collapsed by default, so expand it before scrolling there.
+  const openInsights = () => {
+    setInsightsOpen(true)
+    window.requestAnimationFrame(() => scrollTo(insightsRef))
   }
 
   const filterCritical = () => {
@@ -115,30 +123,32 @@ export function ObserveView() {
               onFocusTable={() => scrollTo(tableRef)}
             />
 
+            {/* Layer 2 — agent table sits above the quality and insights modules */}
+            <div ref={tableRef} className="scroll-mt-4">
+              <AgentTable filter={filter} onFilterChange={setFilter} onSelectAgent={setSelectedAgent} />
+            </div>
+
             {/* Quality module — expands from the Quality trend tile */}
             <div ref={qualityRef} className="scroll-mt-4">
               <QualityPanel
                 open={qualityOpen}
                 onToggle={() => setQualityOpen((current) => !current)}
                 onClose={() => setQualityOpen(false)}
-                onViewRegressionInsight={() => scrollTo(insightsRef)}
+                onViewRegressionInsight={openInsights}
               />
             </div>
 
-            {/* Layer 2 */}
+            {/* Layer 4 */}
             <div ref={insightsRef} className="scroll-mt-4">
               <InsightsPanel
+                open={insightsOpen}
+                onToggle={() => setInsightsOpen((current) => !current)}
                 onOpenAlertModal={setAlertInsight}
                 onViewTraces={(insight) => {
                   const agent = fleetAgents.find((item) => item.name === insight.affectedAgents[0])
                   if (agent) setSelectedAgent(agent)
                 }}
               />
-            </div>
-
-            {/* Layer 3 */}
-            <div ref={tableRef} className="scroll-mt-4">
-              <AgentTable filter={filter} onFilterChange={setFilter} onSelectAgent={setSelectedAgent} />
             </div>
           </div>
         </div>
