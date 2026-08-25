@@ -245,6 +245,30 @@ export const fleetAgents: FleetAgent[] = [
   },
 ]
 
+export interface FleetMetric {
+  value: number
+  deltaPct: number
+}
+
+// Fleet-wide volume. Invocations are summed from the table so the tile and the
+// agent rows can never disagree. Sessions are stored explicitly because they
+// are not tracked per agent.
+export const fleetVolume: { invocations: FleetMetric; sessions: FleetMetric } = {
+  invocations: {
+    value: fleetAgents.reduce((total, agent) => total + agent.invocations, 0),
+    deltaPct: 12.4,
+  },
+  sessions: { value: 38420, deltaPct: 8.1 },
+}
+
+// End-to-end duration across the fleet. Stored as explicit fleet-level figures
+// rather than derived from each agent's `p95`: percentiles cannot be aggregated
+// by averaging them, so a fleet P95 has to be measured, not computed here.
+export const fleetLatency: { p50: FleetMetric; p95: FleetMetric } = {
+  p50: { value: 1150, deltaPct: -3.2 },
+  p95: { value: 4180, deltaPct: 14.6 },
+}
+
 export type InsightSeverity = "critical" | "warning" | "info"
 export type InsightState = "Open" | "Resolved" | "Recurred"
 

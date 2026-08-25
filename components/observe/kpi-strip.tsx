@@ -3,12 +3,37 @@
 import { cn } from "@/lib/utils"
 import { Sparkline } from "./sparkline"
 import { AlertTriangle, ArrowDown, ArrowUp } from "lucide-react"
+import { fleetLatency, fleetVolume } from "@/lib/observe-data"
 
 interface KpiStripProps {
   onFilterCritical: () => void
   onFocusReadiness: () => void
   onOpenQuality: () => void
   onFocusTable: () => void
+}
+
+const formatCount = (value: number) => value.toLocaleString("en-US")
+const formatDuration = (ms: number) => `${(ms / 1000).toFixed(1)}s`
+
+/**
+ * Percentage change vs the prior period. `tone="inverse"` is for metrics where
+ * an increase is bad (latency); the default treats direction as neutral, since
+ * more traffic is neither good nor bad on its own.
+ */
+function Trend({ deltaPct, tone = "neutral" }: { deltaPct: number; tone?: "neutral" | "inverse" }) {
+  const up = deltaPct >= 0
+  const Icon = up ? ArrowUp : ArrowDown
+  return (
+    <span
+      className={cn(
+        "flex items-center text-[11px] shrink-0",
+        tone === "inverse" ? (up ? "text-warning" : "text-success") : "text-muted-foreground",
+      )}
+    >
+      <Icon className="w-3 h-3" />
+      {Math.abs(deltaPct).toFixed(1)}%
+    </span>
+  )
 }
 
 function Tile({
@@ -52,7 +77,7 @@ function Tile({
 
 export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, onFocusTable }: KpiStripProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
       {/* Fleet status */}
       <Tile name="Fleet status" onClick={onFocusTable}>
         <div className="flex flex-col gap-1">
@@ -87,18 +112,46 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
         </div>
       </Tile>
 
-      {/* Quality trend */}
-      <Tile
-        name="Quality trend"
-        warn
-        onClick={onOpenQuality}
-        partial={["across 4 of 12 agents with evals", "partial data — 1 eval run failed"]}
-      >
-        <div className="flex items-end justify-between gap-2">
-          <span className="text-base font-semibold text-warning leading-none whitespace-nowrap">−4.2 pts</span>
-          <Sparkline data={[86, 85, 84, 83, 81, 80, 79]} tone="down" width={34} className="shrink-0" />
+      {/* Invocations & sessions */}
+      <Tile name="Invocations & sessions" onClick={onFocusTable}>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-lg font-semibold text-foreground leading-none">
+              {formatCount(fleetVolume.invocations.value)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">runs</span>
+            <Trend deltaPct={fleetVolume.invocations.deltaPct} />
+          </div>
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-[13px] font-medium text-foreground leading-none">
+              {formatCount(fleetVolume.sessions.value)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">sessions</span>
+            <Trend deltaPct={fleetVolume.sessions.deltaPct} />
+          </div>
         </div>
-        <span className="text-[11px] text-muted-foreground">vs 7-day baseline</span>
+        <span className="text-[10px] leading-tight text-muted-foreground">vs prior period</span>
+      </Tile>
+
+      {/* Latency */}
+      <Tile name="Latency" onClick={onFocusTable}>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-lg font-semibold text-foreground leading-none">
+              {formatDuration(fleetLatency.p50.value)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">P50</span>
+            <Trend deltaPct={fleetLatency.p50.deltaPct} tone="inverse" />
+          </div>
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-[13px] font-medium text-foreground leading-none">
+              {formatDuration(fleetLatency.p95.value)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">P95</span>
+            <Trend deltaPct={fleetLatency.p95.deltaPct} tone="inverse" />
+          </div>
+        </div>
+        <span className="text-[10px] leading-tight text-muted-foreground">end-to-end duration</span>
       </Tile>
 
       {/* Error rate */}
@@ -150,6 +203,20 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
         <div className="flex flex-col text-[10px] leading-tight text-muted-foreground">
           <span>Evals 4/12</span>
         </div>
+      </Tile>
+
+      {/* Quality trend — final tile in the strip */}
+      <Tile
+        name="Quality trend"
+        warn
+        onClick={onOpenQuality}
+        partial={["across 4 of 12 agents with evals", "partial data — 1 eval run failed"]}
+      >
+        <div className="flex items-end justify-between gap-2">
+          <span className="text-base font-semibold text-warning leading-none whitespace-nowrap">−4.2 pts</span>
+          <Sparkline data={[86, 85, 84, 83, 81, 80, 79]} tone="down" width={34} className="shrink-0" />
+        </div>
+        <span className="text-[11px] text-muted-foreground">vs 7-day baseline</span>
       </Tile>
     </div>
   )
