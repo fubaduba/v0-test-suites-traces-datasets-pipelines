@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ExternalLink, X } from "lucide-react"
-import { hostingGibHours, hostingVcpuHours, type FleetAgent } from "@/lib/observe-data"
+import { hostingGibHours, hostingVcpuHours, latencyBreakdown, type FleetAgent } from "@/lib/observe-data"
 import { Sparkline } from "./sparkline"
 import { AttentionBreakdown, AttentionUnscored } from "./attention-breakdown"
+import { LatencyBreakdown, LatencyMethodNote, LatencyUnavailable } from "./latency-breakdown"
 
-const tabs = ["Attention", "Traces", "Evaluations", "Deployments", "Hosting"] as const
+const tabs = ["Attention", "Latency", "Traces", "Evaluations", "Deployments", "Hosting"] as const
 
 export type DrawerTab = (typeof tabs)[number]
 
@@ -36,6 +37,8 @@ export function AgentDrawer({ agent, onClose, initialTab = "Traces" }: AgentDraw
   }, [agent, onClose])
 
   if (!agent) return null
+
+  const stages = latencyBreakdown(agent.coldStart, agent.latencyStages)
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -115,6 +118,35 @@ export function AgentDrawer({ agent, onClose, initialTab = "Traces" }: AgentDraw
               ) : (
                 <div className="px-2.5 py-2.5 bg-secondary/40 border border-border">
                   <AttentionUnscored reason={agent.attentionWhy} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === "Latency" && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-semibold tabular-nums text-foreground leading-none">
+                  {agent.p95 ? `${(agent.p95 / 1000).toFixed(2)}s` : "—"}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {agent.p95 ? "P95 end-to-end duration" : "no latency data"}
+                </span>
+              </div>
+
+              {stages ? (
+                <>
+                  <LatencyBreakdown
+                    stages={stages}
+                    total={agent.p95}
+                    band="P95"
+                    className="px-2.5 py-2.5 bg-secondary/40 border border-border"
+                  />
+                  <LatencyMethodNote band="P95" />
+                </>
+              ) : (
+                <div className="px-2.5 py-2.5 bg-secondary/40 border border-border">
+                  <LatencyUnavailable reason={agent.attentionWhy} />
                 </div>
               )}
             </div>

@@ -6,10 +6,12 @@ import { Info, Search } from "lucide-react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Sparkline } from "./sparkline"
 import { AttentionBreakdown, AttentionUnscored } from "./attention-breakdown"
+import { LatencyBreakdown, LatencyStageBar, LatencyUnavailable } from "./latency-breakdown"
 import type { DrawerTab } from "./agent-drawer"
 import {
   agentEnvironments,
   fleetAgents,
+  latencyBreakdown,
   type AgentEnvironment,
   type AgentStatus,
   type FleetAgent,
@@ -201,6 +203,7 @@ export function AgentTable({
           <tbody>
             {rows.map((agent) => {
               const isMuted = agent.status === "unmonitored"
+              const stages = latencyBreakdown(agent.coldStart, agent.latencyStages)
               return (
                 <tr
                   key={agent.id}
@@ -342,8 +345,45 @@ export function AgentTable({
                       <span className="text-muted-foreground/60">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
-                    {agent.p95 ? `${(agent.p95 / 1000).toFixed(2)}s` : <span className="text-muted-foreground/60">—</span>}
+                  <td className="px-3 py-1.5 text-right">
+                    <HoverCard openDelay={120} closeDelay={80}>
+                      <HoverCardTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={`P95 latency stage breakdown for ${agent.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onSelectAgent(agent, "Latency")
+                          }}
+                          className="group/p95 ml-auto flex items-center gap-1.5"
+                        >
+                          {agent.p95 ? (
+                            <>
+                              {stages && <LatencyStageBar stages={stages} className="w-10 shrink-0" />}
+                              <span className="text-xs tabular-nums text-foreground/90 group-hover/p95:text-foreground">
+                                {(agent.p95 / 1000).toFixed(2)}s
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs tabular-nums text-muted-foreground/60">—</span>
+                          )}
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent side="left" align="start" className="w-80 flex flex-col gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-semibold text-foreground">P95 latency by stage</span>
+                          <span className="text-[11px] text-muted-foreground truncate">{agent.name}</span>
+                        </div>
+                        {stages ? (
+                          <LatencyBreakdown stages={stages} total={agent.p95} band="P95" />
+                        ) : (
+                          <LatencyUnavailable />
+                        )}
+                        <span className="text-[10px] text-muted-foreground">
+                          Click to open the full breakdown
+                        </span>
+                      </HoverCardContent>
+                    </HoverCard>
                   </td>
                   <td className="px-3 py-1.5 text-right text-xs tabular-nums text-foreground/90">
                     ${agent.cost.toFixed(1)}

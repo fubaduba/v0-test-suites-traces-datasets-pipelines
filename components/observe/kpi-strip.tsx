@@ -1,16 +1,25 @@
 "use client"
 
+import { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 import { Sparkline } from "./sparkline"
 import { AlertTriangle, ArrowDown, ArrowUp } from "lucide-react"
-import { fleetLatency, fleetVolume } from "@/lib/observe-data"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { LatencyBreakdown, LatencyStageBar } from "./latency-breakdown"
+import { dominantStage, fleetLatency, fleetVolume, latencyBreakdown } from "@/lib/observe-data"
 
 interface KpiStripProps {
   onFilterCritical: () => void
   onFocusReadiness: () => void
   onOpenQuality: () => void
   onFocusTable: () => void
+  /** Latency tile click-through — focuses the table for per-agent stage data. */
+  onOpenLatency: () => void
 }
+
+// Fleet stage splits are static, so compute them once at module scope.
+const p50Stages = latencyBreakdown(fleetLatency.p50.coldStart, fleetLatency.p50.stages)
+const p95Stages = latencyBreakdown(fleetLatency.p95.coldStart, fleetLatency.p95.stages)
 
 const formatCount = (value: number) => value.toLocaleString("en-US")
 const formatDuration = (ms: number) => `${(ms / 1000).toFixed(1)}s`
@@ -36,27 +45,32 @@ function Trend({ deltaPct, tone = "neutral" }: { deltaPct: number; tone?: "neutr
   )
 }
 
-function Tile({
-  name,
-  warn,
-  children,
-  onClick,
-  partial,
-}: {
-  name: string
-  warn?: boolean
-  children: React.ReactNode
-  onClick?: () => void
-  partial?: string | string[]
-}) {
+/**
+ * Forwards its ref and spreads unknown props onto the button so the tile can be
+ * used as a Radix `asChild` trigger — without that, hover handlers never reach
+ * the DOM node and the drill-in silently does nothing.
+ */
+const Tile = forwardRef<
+  HTMLButtonElement,
+  {
+    name: string
+    warn?: boolean
+    children: React.ReactNode
+    onClick?: () => void
+    partial?: string | string[]
+  } & React.ComponentPropsWithoutRef<"button">
+>(function Tile({ name, warn, children, onClick, partial, className, ...rest }, ref) {
   const notes = partial === undefined ? [] : Array.isArray(partial) ? partial : [partial]
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onClick}
+      {...rest}
       className={cn(
         "group flex flex-col gap-1.5 bg-card border border-border px-3 py-2.5 text-left min-w-0 transition-colors hover:border-primary/50",
         warn && "border-l-2 border-l-warning",
+        className,
       )}
     >
       <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate">{name}</span>
@@ -73,9 +87,15 @@ function Tile({
       )}
     </button>
   )
-}
+})
 
-export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, onFocusTable }: KpiStripProps) {
+export function KpiStrip({
+  onFilterCritical,
+  onFocusReadiness,
+  onOpenQuality,
+  onFocusTable,
+  onOpenLatency,
+}: KpiStripProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
       {/* Fleet status */}
@@ -133,26 +153,52 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
         <span className="text-[10px] leading-tight text-muted-foreground">vs prior period</span>
       </Tile>
 
-      {/* Latency */}
-      <Tile name="Latency" onClick={onFocusTable}>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-lg font-semibold text-foreground leading-none">
-              {formatDuration(fleetLatency.p50.value)}
+      {/* Latency — hover drills into the stage split for each band */}
+      <HoverCard openDelay={120} closeDelay={80}>
+        <HoverCardTrigger asChild>
+          <Tile name="Latency" onClick={onOpenLatency}>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-1.5 min-w-0">
+                <span className="text-lg font-semibold text-foreground leading-none">
+                  {formatDuration(fleetLatency.p50.value)}
+                </span>
+                <span className="text-[11px] text-muted-foreground">P50</span>
+                <Trend deltaPct={fleetLatency.p50.deltaPct} tone="inverse" />
+              </div>
+              <div className="flex items-baseline gap-1.5 min-w-0">
+                <span className="text-[13px] font-medium text-foreground leading-none">
+                  {formatDuration(fleetLatency.p95.value)}
+                </span>
+                <span className="text-[11px] text-muted-foreground">P95</span>
+                <Trend deltaPct={fleetLatency.p95.deltaPct} tone="inverse" />
+              </div>
+            </div>
+            {p95Stages && <LatencyStageBar stages={p95Stages} />}
+            <span className="text-[10px] leading-tight text-muted-foreground">
+              end-to-end duration · by stage
             </span>
-            <span className="text-[11px] text-muted-foreground">P50</span>
-            <Trend deltaPct={fleetLatency.p50.deltaPct} tone="inverse" />
-          </div>
-          <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-[13px] font-medium text-foreground leading-none">
-              {formatDuration(fleetLatency.p95.value)}
-            </span>
-            <span className="text-[11px] text-muted-foreground">P95</span>
-            <Trend deltaPct={fleetLatency.p95.deltaPct} tone="inverse" />
-          </div>
-        </div>
-        <span className="text-[10px] leading-tight text-muted-foreground">end-to-end duration</span>
-      </Tile>
+          </Tile>
+        </HoverCardTrigger>
+        <HoverCardContent side="bottom" align="start" className="w-80 flex flex-col gap-3">
+          <span className="text-xs font-semibold text-foreground">Fleet latency by stage</span>
+          {p95Stages && (
+            <LatencyBreakdown stages={p95Stages} total={fleetLatency.p95.value} band="P95" />
+          )}
+          {p50Stages && (
+            <div className="flex flex-col gap-1.5 pt-2 border-t border-border">
+              <span className="text-[11px] text-muted-foreground">
+                P50 for comparison — {formatDuration(fleetLatency.p50.value)}
+              </span>
+              <LatencyStageBar stages={p50Stages} />
+              <span className="text-[11px] text-muted-foreground text-pretty">
+                {dominantStage(p50Stages).label} leads the median at{" "}
+                {dominantStage(p50Stages).pct.toFixed(0)}%.
+              </span>
+            </div>
+          )}
+          <span className="text-[10px] text-muted-foreground">Click to open the agent table</span>
+        </HoverCardContent>
+      </HoverCard>
 
       {/* Error rate */}
       <Tile name="Error rate" warn onClick={onFocusTable}>

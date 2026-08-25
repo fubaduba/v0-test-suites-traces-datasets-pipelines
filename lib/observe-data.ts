@@ -45,6 +45,60 @@ export function factorContribution(factors: AttentionFactors, key: AttentionFact
   return meta ? meta.weight * factors[key].score : 0
 }
 
+export type LatencyStageKey = "coldStart" | "orchestration" | "tools" | "retrieval"
+
+export const latencyStageMeta: { key: LatencyStageKey; label: string; tone: string }[] = [
+  { key: "coldStart", label: "Cold start", tone: "bg-chart-3" },
+  { key: "orchestration", label: "Model orchestration", tone: "bg-chart-1" },
+  { key: "tools", label: "Tool calls", tone: "bg-chart-4" },
+  { key: "retrieval", label: "Retrieval", tone: "bg-chart-2" },
+]
+
+/**
+ * The three stages measured after process start, in ms. Cold start is not
+ * stored here — it comes from the agent's existing `coldStart` field so the
+ * P95 drill-in and the Cold start column can never show different numbers.
+ */
+export interface LatencyStages {
+  orchestration: number
+  tools: number
+  retrieval: number
+}
+
+export interface LatencyStage {
+  key: LatencyStageKey
+  label: string
+  tone: string
+  ms: number
+  /** Share of the end-to-end total, 0-100. */
+  pct: number
+}
+
+/**
+ * Splits an end-to-end duration into its four stages.
+ *
+ * Important: stage percentiles are NOT additive — a P95 end-to-end duration is
+ * not the sum of per-stage P95s. These figures are therefore the mean stage
+ * duration across the traces that landed in the tail band, which does sum to
+ * the tail total. The UI labels it as such rather than implying stage-wise P95.
+ */
+export function latencyBreakdown(coldStart: number, stages: LatencyStages | null): LatencyStage[] | null {
+  if (!stages) return null
+  const byKey = { coldStart, ...stages }
+  const total = latencyStageMeta.reduce((sum, meta) => sum + byKey[meta.key], 0)
+  if (total <= 0) return null
+  return latencyStageMeta.map((meta) => ({
+    ...meta,
+    ms: byKey[meta.key],
+    pct: (byKey[meta.key] / total) * 100,
+  }))
+}
+
+/** The stage holding the largest share of the total — the one owning the tail. */
+export function dominantStage(stages: LatencyStage[]): LatencyStage {
+  return stages.reduce((top, stage) => (stage.ms > top.ms ? stage : top), stages[0])
+}
+
 export interface FleetAgent {
   id: string
   name: string
@@ -64,6 +118,8 @@ export interface FleetAgent {
   // Cold start in ms. 0 means no telemetry, rendered as an em dash like p95.
   coldStart: number
   p95: number
+  /** Post-start stage split of the P95 tail. Sums with coldStart to p95. */
+  latencyStages: LatencyStages | null
   cost: number
   lastDeployment: string
   version: string
@@ -93,6 +149,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: -9.1,
     coldStart: 890,
     p95: 4820,
+    // 890 + 1680 + 1520 + 730 = 4820
+    latencyStages: { orchestration: 1680, tools: 1520, retrieval: 730 },
     cost: 156.4,
     lastDeployment: "Aug 22, 14:10",
     version: "v17",
@@ -121,6 +179,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: -7.4,
     coldStart: 1240,
     p95: 3910,
+    // 1240 + 1090 + 1180 + 400 = 3910
+    latencyStages: { orchestration: 1090, tools: 1180, retrieval: 400 },
     cost: 61.2,
     lastDeployment: "Aug 21, 09:02",
     version: "v9",
@@ -149,6 +209,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: -6.0,
     coldStart: 620,
     p95: 2240,
+    // 620 + 760 + 560 + 300 = 2240
+    latencyStages: { orchestration: 760, tools: 560, retrieval: 300 },
     cost: 38.9,
     lastDeployment: "Aug 22, 14:10",
     version: "v6",
@@ -178,6 +240,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: -0.8,
     coldStart: 1580,
     p95: 5310,
+    // 1580 + 1120 + 2210 + 400 = 5310 — tool retry loop owns this tail
+    latencyStages: { orchestration: 1120, tools: 2210, retrieval: 400 },
     cost: 84.7,
     lastDeployment: "Aug 23, 18:44",
     version: "v12",
@@ -206,6 +270,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: 3.9,
     coldStart: 310,
     p95: 1180,
+    // 310 + 520 + 210 + 140 = 1180
+    latencyStages: { orchestration: 520, tools: 210, retrieval: 140 },
     cost: 21.4,
     lastDeployment: "Aug 23, 07:15",
     version: "v22",
@@ -230,6 +296,7 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: null,
     coldStart: 0,
     p95: 0,
+    latencyStages: null,
     cost: 0,
     lastDeployment: "Aug 12, 11:30",
     version: "v2",
@@ -257,6 +324,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: -3.2,
     coldStart: 740,
     p95: 2890,
+    // 740 + 900 + 830 + 420 = 2890
+    latencyStages: { orchestration: 900, tools: 830, retrieval: 420 },
     cost: 12.8,
     lastDeployment: "Aug 20, 16:02",
     version: "v4",
@@ -285,6 +354,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: 0.6,
     coldStart: 450,
     p95: 1520,
+    // 450 + 560 + 350 + 160 = 1520
+    latencyStages: { orchestration: 560, tools: 350, retrieval: 160 },
     cost: 9.6,
     lastDeployment: "Aug 19, 10:41",
     version: "v3",
@@ -312,6 +383,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: 1.1,
     coldStart: 420,
     p95: 1340,
+    // 420 + 480 + 300 + 140 = 1340
+    latencyStages: { orchestration: 480, tools: 300, retrieval: 140 },
     cost: 8.2,
     lastDeployment: "Aug 18, 13:20",
     version: "v3",
@@ -339,6 +412,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: 0.9,
     coldStart: 390,
     p95: 1210,
+    // 390 + 430 + 260 + 130 = 1210
+    latencyStages: { orchestration: 430, tools: 260, retrieval: 130 },
     cost: 6.4,
     lastDeployment: "Aug 18, 13:20",
     version: "v2",
@@ -362,6 +437,7 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: null,
     coldStart: 0,
     p95: 0,
+    latencyStages: null,
     cost: 1.1,
     lastDeployment: "Aug 15, 08:55",
     version: "v1",
@@ -389,6 +465,8 @@ const rawAgents: Omit<FleetAgent, "attention">[] = [
     qualityDelta: 1.4,
     coldStart: 480,
     p95: 1490,
+    // 480 + 520 + 330 + 160 = 1490
+    latencyStages: { orchestration: 520, tools: 330, retrieval: 160 },
     cost: 11.3,
     lastDeployment: "Aug 21, 09:02",
     version: "v8",
@@ -423,9 +501,25 @@ export const fleetVolume: { invocations: FleetMetric; sessions: FleetMetric } = 
 // End-to-end duration across the fleet. Stored as explicit fleet-level figures
 // rather than derived from each agent's `p95`: percentiles cannot be aggregated
 // by averaging them, so a fleet P95 has to be measured, not computed here.
-export const fleetLatency: { p50: FleetMetric; p95: FleetMetric } = {
-  p50: { value: 1150, deltaPct: -3.2 },
-  p95: { value: 4180, deltaPct: 14.6 },
+// Each band carries its own stage split, summing to that band's total.
+export const fleetLatency: {
+  p50: FleetMetric & { coldStart: number; stages: LatencyStages }
+  p95: FleetMetric & { coldStart: number; stages: LatencyStages }
+} = {
+  // 180 + 520 + 310 + 140 = 1150
+  p50: {
+    value: 1150,
+    deltaPct: -3.2,
+    coldStart: 180,
+    stages: { orchestration: 520, tools: 310, retrieval: 140 },
+  },
+  // 760 + 1340 + 1610 + 470 = 4180
+  p95: {
+    value: 4180,
+    deltaPct: 14.6,
+    coldStart: 760,
+    stages: { orchestration: 1340, tools: 1610, retrieval: 470 },
+  },
 }
 
 export type InsightSeverity = "critical" | "warning" | "info"

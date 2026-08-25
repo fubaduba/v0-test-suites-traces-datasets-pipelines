@@ -128,6 +128,7 @@ export function ObserveView() {
               onFocusReadiness={focusReadiness}
               onOpenQuality={openQuality}
               onFocusTable={() => scrollTo(tableRef)}
+              onOpenLatency={() => scrollTo(tableRef)}
             />
 
             {/* Layer 2 — agent table sits above the quality and insights modules */}
