@@ -3,12 +3,12 @@
 import { cn } from "@/lib/utils"
 import { Sparkline } from "./sparkline"
 import { AlertTriangle, ArrowDown, ArrowUp } from "lucide-react"
+import type { MetricId } from "@/lib/metric-trends"
 
 interface KpiStripProps {
+  onOpenMetric: (metricId: MetricId) => void
   onFilterCritical: () => void
   onFocusReadiness: () => void
-  onOpenQuality: () => void
-  onFocusTable: () => void
 }
 
 function Tile({
@@ -50,11 +50,11 @@ function Tile({
   )
 }
 
-export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, onFocusTable }: KpiStripProps) {
+export function KpiStrip({ onOpenMetric, onFilterCritical, onFocusReadiness }: KpiStripProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-2">
       {/* Fleet status */}
-      <Tile name="Fleet status" onClick={onFocusTable}>
+      <Tile name="Fleet status" onClick={() => onOpenMetric("fleet")}>
         <div className="flex flex-col gap-1">
           <div className="flex items-stretch h-1.5 gap-px">
             <span className="bg-success" style={{ width: "50%" }} aria-hidden="true" />
@@ -91,7 +91,7 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
       <Tile
         name="Quality trend"
         warn
-        onClick={onOpenQuality}
+        onClick={() => onOpenMetric("quality")}
         partial={["across 4 of 12 agents with evals", "partial data — 1 eval run failed"]}
       >
         <div className="flex items-end justify-between gap-2">
@@ -102,7 +102,7 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
       </Tile>
 
       {/* Error rate */}
-      <Tile name="Error rate" warn onClick={onFocusTable}>
+      <Tile name="Error rate" warn onClick={() => onOpenMetric("errorRate")}>
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-semibold text-foreground leading-none">2.3%</span>
           <ArrowUp className="w-3 h-3 text-danger" />
@@ -111,7 +111,7 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
       </Tile>
 
       {/* Cost */}
-      <Tile name="Cost" onClick={onFocusTable}>
+      <Tile name="Cost" onClick={() => onOpenMetric("cost")}>
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-semibold text-foreground leading-none">$412</span>
           <span className="text-[11px] text-muted-foreground">/day</span>
@@ -127,7 +127,7 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
       </Tile>
 
       {/* Capacity */}
-      <Tile name="Capacity" onClick={onFocusTable}>
+      <Tile name="Capacity" onClick={() => onOpenMetric("capacity")}>
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-semibold text-foreground leading-none">71%</span>
           <span className="text-[11px] text-muted-foreground">PTU utilization</span>
@@ -141,7 +141,7 @@ export function KpiStrip({ onFilterCritical, onFocusReadiness, onOpenQuality, on
       </Tile>
 
       {/* Coverage */}
-      <Tile name="Coverage" warn onClick={onFocusReadiness} partial={"2 agents stale >24h"}>
+      <Tile name="Coverage" warn onClick={() => onOpenMetric("coverage")} partial={"2 agents stale >24h"}>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" aria-hidden="true" />
           <span className="text-[13px] font-medium text-foreground leading-tight">Tracing 9/12</span>

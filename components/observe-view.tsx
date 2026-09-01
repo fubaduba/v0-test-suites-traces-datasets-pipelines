@@ -5,28 +5,32 @@ import { cn } from "@/lib/utils"
 import { ExternalLink, PanelRightOpen } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { KpiStrip } from "@/components/observe/kpi-strip"
-import { QualityPanel } from "@/components/observe/quality-panel"
+import { MetricTrendView } from "@/components/observe/metric-trend-view"
 import { InsightsPanel } from "@/components/observe/insights-panel"
 import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
 import { AgentDrawer } from "@/components/observe/agent-drawer"
 import { fleetAgents, type FleetAgent } from "@/lib/observe-data"
+import type { MetricId, TracesHandoff } from "@/lib/metric-trends"
 
 const timeframes = ["1h", "24h", "7d", "30d"] as const
 type Filter = "all" | "attention" | "critical" | "unmonitored"
 
-export function ObserveView() {
+interface ObserveViewProps {
+  onViewTraces?: (handoff: TracesHandoff) => void
+}
+
+export function ObserveView({ onViewTraces }: ObserveViewProps) {
   const [timeframe, setTimeframe] = useState<(typeof timeframes)[number]>("24h")
   const [filter, setFilter] = useState<Filter>("all")
   const [railOpen, setRailOpen] = useState(false)
   const [highlightReadiness, setHighlightReadiness] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
 
-  const [qualityOpen, setQualityOpen] = useState(false)
+  const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
 
   const insightsRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLDivElement>(null)
-  const qualityRef = useRef<HTMLDivElement>(null)
 
   // Open the rail by default only where it can dock beside the content (xl and up).
   // Done after mount so server and client render the same initial markup.
@@ -43,15 +47,22 @@ export function ObserveView() {
     window.setTimeout(() => setHighlightReadiness(false), 2200)
   }
 
-  const openQuality = () => {
-    setQualityOpen(true)
-    // Let the panel mount before scrolling it into view.
-    window.requestAnimationFrame(() => scrollTo(qualityRef))
-  }
-
   const filterCritical = () => {
     setFilter("critical")
     scrollTo(tableRef)
+  }
+
+  if (activeMetric) {
+    return (
+      <MetricTrendView
+        metricId={activeMetric}
+        onBack={() => setActiveMetric(null)}
+        onViewTraces={(handoff) => {
+          setActiveMetric(null)
+          onViewTraces?.(handoff)
+        }}
+      />
+    )
   }
 
   return (
@@ -107,21 +118,10 @@ export function ObserveView() {
 
             {/* Layer 1 */}
             <KpiStrip
+              onOpenMetric={setActiveMetric}
               onFilterCritical={filterCritical}
               onFocusReadiness={focusReadiness}
-              onOpenQuality={openQuality}
-              onFocusTable={() => scrollTo(tableRef)}
             />
-
-            {/* Quality module — expands from the Quality trend tile */}
-            <div ref={qualityRef} className="scroll-mt-4">
-              <QualityPanel
-                open={qualityOpen}
-                onToggle={() => setQualityOpen((current) => !current)}
-                onClose={() => setQualityOpen(false)}
-                onViewRegressionInsight={() => scrollTo(insightsRef)}
-              />
-            </div>
 
             {/* Layer 2 */}
             <div ref={insightsRef} className="scroll-mt-4">
