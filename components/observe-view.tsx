@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import { ExternalLink, PanelRightOpen } from "lucide-react"
+import { ExternalLink, Settings2 } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { KpiStrip } from "@/components/observe/kpi-strip"
 import { MetricTrendView } from "@/components/observe/metric-trend-view"
@@ -10,7 +10,7 @@ import { InsightsPanel } from "@/components/observe/insights-panel"
 import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
 import { AgentDrawer } from "@/components/observe/agent-drawer"
-import { fleetAgents, type FleetAgent } from "@/lib/observe-data"
+import { fleetAgents, readinessItems, type FleetAgent } from "@/lib/observe-data"
 import type { MetricId } from "@/lib/metric-trends"
 import { initFromMetric, type TraceQueryInit } from "@/lib/trace-explorer-data"
 
@@ -34,11 +34,8 @@ export function ObserveView({ onInvestigate, onOpenInsights }: ObserveViewProps)
 
   const tableRef = useRef<HTMLDivElement>(null)
 
-  // Open the rail by default only where it can dock beside the content (xl and up).
-  // Done after mount so server and client render the same initial markup.
-  useEffect(() => {
-    if (window.matchMedia("(min-width: 1280px)").matches) setRailOpen(true)
-  }, [])
+  // The rail no longer opens on load — the page leads with tracing data, and the
+  // collapsed "setup items" line above the KPI strip opens it on demand.
 
   const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) =>
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -105,18 +102,24 @@ export function ObserveView({ onInvestigate, onOpenInsights }: ObserveViewProps)
                   Open in Azure Monitor
                   <ExternalLink className="w-3 h-3" />
                 </button>
-                {!railOpen && (
-                  <button
-                    type="button"
-                    onClick={() => setRailOpen(true)}
-                    className="flex items-center gap-1.5 px-2 py-1 text-[11px] bg-secondary border border-border text-muted-foreground hover:text-foreground"
-                  >
-                    <PanelRightOpen className="w-3.5 h-3.5" />
-                    Readiness
-                  </button>
-                )}
               </div>
             </header>
+
+            {/* Collapsed setup line — configuration is one line, not a column */}
+            <div className="flex items-center gap-2 px-3 py-1.5 border border-border bg-secondary/50 text-xs text-muted-foreground">
+              <Settings2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span className="flex-1">
+                <span className="font-medium text-foreground">{readinessItems.length} setup items</span>
+                {" · finish configuring monitoring for full coverage"}
+              </span>
+              <button
+                type="button"
+                onClick={focusReadiness}
+                className="shrink-0 text-primary hover:underline"
+              >
+                Review
+              </button>
+            </div>
 
             {/* Layer 1 */}
             <KpiStrip
