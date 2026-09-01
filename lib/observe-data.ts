@@ -258,6 +258,8 @@ export const insightCategories: InsightCategory[] = [
   "Latency",
 ]
 
+export type InsightImpact = "high" | "medium" | "low"
+
 export interface Insight {
   id: string
   severity: InsightSeverity
@@ -270,6 +272,14 @@ export interface Insight {
   impact: string
   customerImpact: string
   likelyCause: string
+  /** Ranking weight for the Recommended actions list — higher is more important. */
+  importance: number
+  /** Neutral impact level shown as a bar in the Recommended actions list. */
+  impactLevel: InsightImpact
+  /** One line of plain "go do this" language for the Recommended actions row. */
+  recommendedAction: string
+  /** The single asset the action row surfaces (agent id, deployment, etc.). */
+  affectedAsset: string
   alertPrefill: {
     metric: string
     scope: string
@@ -291,6 +301,10 @@ export const insights: Insight[] = [
     customerImpact: "~1,840 sessions in affected flows",
     likelyCause:
       "shared model deployment updated Aug 22, 14:10 UTC (cross-agent cluster — not isolated)",
+    importance: 96,
+    impactLevel: "high",
+    recommendedAction: "Roll back the gpt4o-prod-eastus2 deployment to recover groundedness",
+    affectedAsset: "gpt4o-prod-eastus2",
     alertPrefill: {
       metric: "groundedness",
       scope: "3 affected agents",
@@ -309,6 +323,10 @@ export const insights: Insight[] = [
     impact: "4.1× baseline tokens/run since last deployment (v12) · +$61/day",
     customerImpact: "~260 sessions with elevated latency",
     likelyCause: "retry loop in tool call",
+    importance: 74,
+    impactLevel: "medium",
+    recommendedAction: "Investigate the tool-call retry loop driving +$61/day in tokens",
+    affectedAsset: "acrtest-net-img-20260717",
     alertPrefill: {
       metric: "tokens per run",
       scope: "1 affected agent",
@@ -328,6 +346,10 @@ export const insights: Insight[] = [
     impact: "22 failed invocations with no spans",
     customerImpact: "~22 sessions failed at entry point",
     likelyCause: "auth misconfiguration",
+    importance: 70,
+    impactLevel: "medium",
+    recommendedAction: "Fix the auth misconfiguration causing invocations to fail before tracing",
+    affectedAsset: "faos-ado-memory-agent",
     alertPrefill: {
       metric: "invocation failure rate",
       scope: "1 affected agent",
@@ -347,6 +369,10 @@ export const insights: Insight[] = [
     impact: "resolved Aug 23 after prompt rollback — health recovered ✓",
     customerImpact: "~140 sessions affected before rollback",
     likelyCause: "prompt v21 added an extra retrieval hop",
+    importance: 20,
+    impactLevel: "low",
+    recommendedAction: "Confirm the P95 latency recovery is holding after the prompt rollback",
+    affectedAsset: "math-prompt-agent",
     alertPrefill: {
       metric: "P95 latency",
       scope: "1 affected agent",

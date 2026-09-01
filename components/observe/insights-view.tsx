@@ -2,13 +2,8 @@
 
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { InsightsPanel } from "@/components/observe/insights-panel"
-import { initFromInsight, type TraceQueryInit } from "@/lib/trace-explorer-data"
 
-interface InsightsViewProps {
-  onInvestigate: (init: TraceQueryInit) => void
-}
-
-export function InsightsView({ onInvestigate }: InsightsViewProps) {
+export function InsightsView() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex-1 overflow-y-auto">
@@ -19,7 +14,7 @@ export function InsightsView({ onInvestigate }: InsightsViewProps) {
               Prioritized findings across every monitored agent in this project
             </p>
           </header>
-          <InsightsPanel onViewTraces={onViewTraces} />
+          <InsightsPanel onOpenInsight={() => {}} />
         </div>
       </div>
     </TooltipProvider>

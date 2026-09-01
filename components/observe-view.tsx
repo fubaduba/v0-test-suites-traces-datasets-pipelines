@@ -12,16 +12,18 @@ import { RightRail } from "@/components/observe/right-rail"
 import { AgentDrawer } from "@/components/observe/agent-drawer"
 import { fleetAgents, type FleetAgent } from "@/lib/observe-data"
 import type { MetricId } from "@/lib/metric-trends"
-import { initFromInsight, initFromMetric, type TraceQueryInit } from "@/lib/trace-explorer-data"
+import { initFromMetric, type TraceQueryInit } from "@/lib/trace-explorer-data"
 
 const timeframes = ["1h", "24h", "7d", "30d"] as const
 type Filter = "all" | "attention" | "critical" | "unmonitored"
 
 interface ObserveViewProps {
   onInvestigate?: (init: TraceQueryInit) => void
+  /** Navigate to the full Insights page (used by row clicks and "View all"). */
+  onOpenInsights?: () => void
 }
 
-export function ObserveView({ onInvestigate }: ObserveViewProps) {
+export function ObserveView({ onInvestigate, onOpenInsights }: ObserveViewProps) {
   const [timeframe, setTimeframe] = useState<(typeof timeframes)[number]>("24h")
   const [filter, setFilter] = useState<Filter>("all")
   const [railOpen, setRailOpen] = useState(false)
@@ -30,7 +32,6 @@ export function ObserveView({ onInvestigate }: ObserveViewProps) {
 
   const [activeMetric, setActiveMetric] = useState<MetricId | null>(null)
 
-  const insightsRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLDivElement>(null)
 
   // Open the rail by default only where it can dock beside the content (xl and up).
@@ -124,14 +125,18 @@ export function ObserveView({ onInvestigate }: ObserveViewProps) {
               onFocusReadiness={focusReadiness}
             />
 
-            {/* Layer 2 */}
-            <div ref={insightsRef} className="scroll-mt-4">
-              <InsightsPanel onViewTraces={(insight) => onInvestigate?.(initFromInsight(insight))} />
-            </div>
-
-            {/* Layer 3 */}
+            {/* Layer 2 — assets matrix */}
             <div ref={tableRef} className="scroll-mt-4">
               <AgentTable filter={filter} onFilterChange={setFilter} onSelectAgent={setSelectedAgent} />
+            </div>
+
+            {/* Layer 3 — recommended actions (entry point into the full insight experience) */}
+            <div className="scroll-mt-4">
+              <InsightsPanel
+                onOpenInsight={() => onOpenInsights?.()}
+                onViewAll={() => onOpenInsights?.()}
+                onOpenPolicy={() => onOpenInsights?.()}
+              />
             </div>
           </div>
         </div>

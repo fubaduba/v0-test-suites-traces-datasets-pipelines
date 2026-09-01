@@ -269,6 +269,7 @@ export default function AgentMonitoringPage() {
               setTraceQueryInit(init)
               setSidebarSection("observe-traces")
             }}
+            onOpenInsights={() => setSidebarSection("observe-insights")}
           />
         )}
 
@@ -278,14 +279,7 @@ export default function AgentMonitoringPage() {
 
         {sidebarSection === "observe-assets" && <AssetsView />}
 
-        {sidebarSection === "observe-insights" && (
-          <InsightsView
-            onInvestigate={(init) => {
-              setTraceQueryInit(init)
-              setSidebarSection("observe-traces")
-            }}
-          />
-        )}
+        {sidebarSection === "observe-insights" && <InsightsView />}
 
         {sidebarSection === "tools" && <ToolsView />}
 
