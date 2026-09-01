@@ -11,6 +11,8 @@ import { DataView } from "@/components/data-view"
 import { ObserveView } from "@/components/observe-view"
 import { AssetsView } from "@/components/observe/assets-view"
 import { InsightsView } from "@/components/observe/insights-view"
+import { ToolsView } from "@/components/observe/tools-view"
+import { ModelsView } from "@/components/observe/models-view"
 import { metricDefs, filterDimensions, type TracesHandoff } from "@/lib/metric-trends"
 import { cn } from "@/lib/utils"
 
@@ -231,9 +233,11 @@ export default function AgentMonitoringPage() {
   }
 
   const isObserve = sidebarSection.startsWith("observe")
+  const isFleet = sidebarSection === "tools" || sidebarSection === "models"
+  const isDashboard = isObserve || isFleet
 
   return (
-    <div className={cn("flex bg-background", isObserve ? "h-screen overflow-hidden" : "min-h-screen")}>
+    <div className={cn("flex bg-background", isDashboard ? "h-screen overflow-hidden" : "min-h-screen")}>
       {/* Sidebar */}
       <Sidebar 
         activeSection={sidebarSection} 
@@ -245,6 +249,10 @@ export default function AgentMonitoringPage() {
             setActiveTab("traces")
           } else if (section === "observe") {
             setActiveTab("observe")
+          } else if (section === "tools") {
+            setActiveTab("tools")
+          } else if (section === "models") {
+            setActiveTab("models")
           }
         }}
       />
@@ -312,8 +320,12 @@ export default function AgentMonitoringPage() {
           <InsightsView onViewTraces={() => setSidebarSection("observe-traces")} />
         )}
 
+        {sidebarSection === "tools" && <ToolsView />}
+
+        {sidebarSection === "models" && <ModelsView />}
+
         {/* Agent Header with tabs */}
-        {!isObserve && <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />}
+        {!isDashboard && <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />}
 
         {/* Content based on active tab */}
         {activeTab === "traces" && (
@@ -354,7 +366,7 @@ export default function AgentMonitoringPage() {
           />
         )}
 
-        {!isObserve && !["traces", "evaluation", "playground", "monitor", "data"].includes(activeTab) && (
+        {!isDashboard && !["traces", "evaluation", "playground", "monitor", "data"].includes(activeTab) && (
           <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
             {sidebarSection} — placeholder
           </div>
