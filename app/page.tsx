@@ -9,6 +9,8 @@ import { EvaluationView } from "@/components/evaluation-view"
 import { ContinuousEvalMonitor } from "@/components/continuous-eval-monitor"
 import { DataView } from "@/components/data-view"
 import { ObserveView } from "@/components/observe-view"
+import { AssetsView } from "@/components/observe/assets-view"
+import { InsightsView } from "@/components/observe/insights-view"
 import { cn } from "@/lib/utils"
 
 interface ThumbQuestion {
@@ -226,7 +228,7 @@ export default function AgentMonitoringPage() {
     // setActiveTab("evaluation") - removed, stay on traces
   }
 
-  const isObserve = sidebarSection === "observe"
+  const isObserve = sidebarSection.startsWith("observe")
 
   return (
     <div className={cn("flex bg-background", isObserve ? "h-screen overflow-hidden" : "min-h-screen")}>
@@ -250,7 +252,26 @@ export default function AgentMonitoringPage() {
         {/* Top Header */}
         <Header />
 
-        {isObserve && <ObserveView />}
+        {sidebarSection === "observe" && <ObserveView />}
+
+        {sidebarSection === "observe-traces" && (
+          <TracesTable
+            onAnnotationComplete={handleAnnotationComplete}
+            annotations={traceAnnotations}
+            hasPipelineConfigured={true}
+            onNavigateToPipeline={() => {
+              setSidebarSection("data")
+              setDataSubTab("pipelines")
+              setActiveTab("data")
+            }}
+          />
+        )}
+
+        {sidebarSection === "observe-assets" && <AssetsView />}
+
+        {sidebarSection === "observe-insights" && (
+          <InsightsView onViewTraces={() => setSidebarSection("observe-traces")} />
+        )}
 
         {/* Agent Header with tabs */}
         {!isObserve && <AgentHeader activeTab={activeTab} onTabChange={setActiveTab} />}

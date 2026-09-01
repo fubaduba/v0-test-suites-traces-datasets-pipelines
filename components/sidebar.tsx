@@ -10,7 +10,10 @@ import {
   Brain,
   Shield,
   Database,
-  Activity,
+  LayoutDashboard,
+  ListTree,
+  Layers,
+  Lightbulb,
   LineChart,
   Sliders,
   Settings,
@@ -36,8 +39,13 @@ const sections = [
     ],
   },
   {
-    label: "Operate",
-    items: [{ icon: Activity, label: "Observe", id: "observe" }],
+    label: "Observe",
+    items: [
+      { icon: LayoutDashboard, label: "Overview", id: "observe" },
+      { icon: ListTree, label: "Traces", id: "observe-traces" },
+      { icon: Layers, label: "Assets", id: "observe-assets" },
+      { icon: Lightbulb, label: "Insights", id: "observe-insights" },
+    ],
   },
   {
     label: "Optimize",

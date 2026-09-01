@@ -38,14 +38,13 @@ function DetailRow({ label, value, muted }: { label: string; value: React.ReactN
 type GroupBy = "Severity" | "Category" | "Status"
 
 interface InsightsPanelProps {
-  onOpenAlertModal: (insight: Insight) => void
   onViewTraces: (insight: Insight) => void
 }
 
 const severityRank: Record<Insight["severity"], number> = { critical: 0, warning: 1, info: 2 }
 const stateRank: Record<Insight["state"], number> = { Recurred: 0, Open: 1, Resolved: 2 }
 
-export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelProps) {
+export function InsightsPanel({ onViewTraces }: InsightsPanelProps) {
   const [expanded, setExpanded] = useState<string[]>([insights[0].id])
   const [groupBy, setGroupBy] = useState<GroupBy>("Severity")
 
@@ -170,13 +169,6 @@ export function InsightsPanel({ onOpenAlertModal, onViewTraces }: InsightsPanelP
                       className="px-2.5 py-1 text-xs bg-secondary text-foreground border border-border hover:border-primary/50 transition-colors"
                     >
                       View traces
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onOpenAlertModal(insight)}
-                      className="px-2.5 py-1 text-xs bg-secondary text-foreground border border-border hover:border-primary/50 transition-colors"
-                    >
-                      Create alert from this insight
                     </button>
                   </div>
                 </div>

@@ -10,8 +10,7 @@ import { InsightsPanel } from "@/components/observe/insights-panel"
 import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
 import { AgentDrawer } from "@/components/observe/agent-drawer"
-import { CreateAlertModal } from "@/components/observe/create-alert-modal"
-import { fleetAgents, type FleetAgent, type Insight } from "@/lib/observe-data"
+import { fleetAgents, type FleetAgent } from "@/lib/observe-data"
 
 const timeframes = ["1h", "24h", "7d", "30d"] as const
 type Filter = "all" | "attention" | "critical" | "unmonitored"
@@ -22,7 +21,6 @@ export function ObserveView() {
   const [railOpen, setRailOpen] = useState(false)
   const [highlightReadiness, setHighlightReadiness] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<FleetAgent | null>(null)
-  const [alertInsight, setAlertInsight] = useState<Insight | null>(null)
 
   const [qualityOpen, setQualityOpen] = useState(false)
 
@@ -128,7 +126,6 @@ export function ObserveView() {
             {/* Layer 2 */}
             <div ref={insightsRef} className="scroll-mt-4">
               <InsightsPanel
-                onOpenAlertModal={setAlertInsight}
                 onViewTraces={(insight) => {
                   const agent = fleetAgents.find((item) => item.name === insight.affectedAgents[0])
                   if (agent) setSelectedAgent(agent)
@@ -156,7 +153,6 @@ export function ObserveView() {
         )}
 
         <AgentDrawer agent={selectedAgent} onClose={() => setSelectedAgent(null)} />
-        <CreateAlertModal insight={alertInsight} onClose={() => setAlertInsight(null)} />
       </div>
     </TooltipProvider>
   )
