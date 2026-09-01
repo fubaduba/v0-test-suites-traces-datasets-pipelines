@@ -168,7 +168,7 @@ export function InsightsPanel({ onViewTraces }: InsightsPanelProps) {
                       onClick={() => onViewTraces(insight)}
                       className="px-2.5 py-1 text-xs bg-secondary text-foreground border border-border hover:border-primary/50 transition-colors"
                     >
-                      View traces
+                      Investigate in traces
                     </button>
                   </div>
                 </div>

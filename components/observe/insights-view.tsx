@@ -2,13 +2,13 @@
 
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { InsightsPanel } from "@/components/observe/insights-panel"
-import type { Insight } from "@/lib/observe-data"
+import { initFromInsight, type TraceQueryInit } from "@/lib/trace-explorer-data"
 
 interface InsightsViewProps {
-  onViewTraces: (insight: Insight) => void
+  onInvestigate: (init: TraceQueryInit) => void
 }
 
-export function InsightsView({ onViewTraces }: InsightsViewProps) {
+export function InsightsView({ onInvestigate }: InsightsViewProps) {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex-1 overflow-y-auto">

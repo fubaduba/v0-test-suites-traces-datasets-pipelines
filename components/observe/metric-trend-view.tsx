@@ -109,7 +109,7 @@ export function MetricTrendView({ metricId, onBack, onViewTraces }: MetricTrendV
               onClick={() => onViewTraces({ metricId, window, filters })}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              View traces for this window
+              Investigate in traces
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

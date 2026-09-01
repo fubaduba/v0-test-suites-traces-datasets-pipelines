@@ -13,7 +13,8 @@ import { AssetsView } from "@/components/observe/assets-view"
 import { InsightsView } from "@/components/observe/insights-view"
 import { ToolsView } from "@/components/observe/tools-view"
 import { ModelsView } from "@/components/observe/models-view"
-import { metricDefs, filterDimensions, type TracesHandoff } from "@/lib/metric-trends"
+import { TraceExplorer } from "@/components/observe/trace-explorer"
+import type { TraceQueryInit } from "@/lib/trace-explorer-data"
 import { cn } from "@/lib/utils"
 
 interface ThumbQuestion {
@@ -76,7 +77,7 @@ export default function AgentMonitoringPage() {
   const [activeTab, setActiveTab] = useState("observe")
   const [sidebarSection, setSidebarSection] = useState("observe")
   const [dataSubTab, setDataSubTab] = useState("datasets")
-  const [tracesContext, setTracesContext] = useState<TracesHandoff | null>(null)
+  const [traceQueryInit, setTraceQueryInit] = useState<TraceQueryInit | null>(null)
   const [traceAnnotations, setTraceAnnotations] = useState<Record<string, TraceAnnotation>>({
     // Prepopulated end-user annotations
     "7a6bf85a13a84c58b38d001f6e973870": {
@@ -264,60 +265,26 @@ export default function AgentMonitoringPage() {
 
         {sidebarSection === "observe" && (
           <ObserveView
-            onViewTraces={(handoff) => {
-              setTracesContext(handoff)
+            onInvestigate={(init) => {
+              setTraceQueryInit(init)
               setSidebarSection("observe-traces")
             }}
           />
         )}
 
         {sidebarSection === "observe-traces" && (
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {tracesContext && (
-              <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-primary/10 border-b border-primary/30 text-xs">
-                <span className="text-muted-foreground">Filtered from</span>
-                <span className="font-medium text-foreground">
-                  {metricDefs[tracesContext.metricId].label}
-                </span>
-                <span className="px-1.5 py-0.5 bg-secondary border border-border text-[11px] text-foreground">
-                  {tracesContext.window === "custom" ? "custom range" : `last ${tracesContext.window}`}
-                </span>
-                {filterDimensions
-                  .filter((dimension) => tracesContext.filters[dimension.id])
-                  .map((dimension) => (
-                    <span
-                      key={dimension.id}
-                      className="px-1.5 py-0.5 bg-secondary border border-border text-[11px] font-mono text-foreground"
-                    >
-                      {dimension.label}: {tracesContext.filters[dimension.id]}
-                    </span>
-                  ))}
-                <button
-                  type="button"
-                  onClick={() => setTracesContext(null)}
-                  className="ml-auto text-muted-foreground hover:text-foreground"
-                >
-                  Clear scope
-                </button>
-              </div>
-            )}
-            <TracesTable
-              onAnnotationComplete={handleAnnotationComplete}
-              annotations={traceAnnotations}
-              hasPipelineConfigured={true}
-              onNavigateToPipeline={() => {
-                setSidebarSection("data")
-                setDataSubTab("pipelines")
-                setActiveTab("data")
-              }}
-            />
-          </div>
+          <TraceExplorer init={traceQueryInit} onClearInit={() => setTraceQueryInit(null)} />
         )}
 
         {sidebarSection === "observe-assets" && <AssetsView />}
 
         {sidebarSection === "observe-insights" && (
-          <InsightsView onViewTraces={() => setSidebarSection("observe-traces")} />
+          <InsightsView
+            onInvestigate={(init) => {
+              setTraceQueryInit(init)
+              setSidebarSection("observe-traces")
+            }}
+          />
         )}
 
         {sidebarSection === "tools" && <ToolsView />}

@@ -11,16 +11,17 @@ import { AgentTable } from "@/components/observe/agent-table"
 import { RightRail } from "@/components/observe/right-rail"
 import { AgentDrawer } from "@/components/observe/agent-drawer"
 import { fleetAgents, type FleetAgent } from "@/lib/observe-data"
-import type { MetricId, TracesHandoff } from "@/lib/metric-trends"
+import type { MetricId } from "@/lib/metric-trends"
+import { initFromInsight, initFromMetric, type TraceQueryInit } from "@/lib/trace-explorer-data"
 
 const timeframes = ["1h", "24h", "7d", "30d"] as const
 type Filter = "all" | "attention" | "critical" | "unmonitored"
 
 interface ObserveViewProps {
-  onViewTraces?: (handoff: TracesHandoff) => void
+  onInvestigate?: (init: TraceQueryInit) => void
 }
 
-export function ObserveView({ onViewTraces }: ObserveViewProps) {
+export function ObserveView({ onInvestigate }: ObserveViewProps) {
   const [timeframe, setTimeframe] = useState<(typeof timeframes)[number]>("24h")
   const [filter, setFilter] = useState<Filter>("all")
   const [railOpen, setRailOpen] = useState(false)
@@ -59,7 +60,7 @@ export function ObserveView({ onViewTraces }: ObserveViewProps) {
         onBack={() => setActiveMetric(null)}
         onViewTraces={(handoff) => {
           setActiveMetric(null)
-          onViewTraces?.(handoff)
+          onInvestigate?.(initFromMetric(handoff.metricId, handoff.window, handoff.filters))
         }}
       />
     )
@@ -125,12 +126,7 @@ export function ObserveView({ onViewTraces }: ObserveViewProps) {
 
             {/* Layer 2 */}
             <div ref={insightsRef} className="scroll-mt-4">
-              <InsightsPanel
-                onViewTraces={(insight) => {
-                  const agent = fleetAgents.find((item) => item.name === insight.affectedAgents[0])
-                  if (agent) setSelectedAgent(agent)
-                }}
-              />
+              <InsightsPanel onViewTraces={(insight) => onInvestigate?.(initFromInsight(insight))} />
             </div>
 
             {/* Layer 3 */}
